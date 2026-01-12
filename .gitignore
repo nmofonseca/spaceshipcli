@@ -1,1 +1,7 @@
 .env
+.venv
+.devbox
+.gemini
+dist/
+build/
+*.spec
