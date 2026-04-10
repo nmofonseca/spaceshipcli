@@ -6,39 +6,32 @@ from spaceship_cli.client import SpaceshipClient
 app = typer.Typer()
 console = Console()
 
-@app.command(name="list")
-def list_contacts(
-    limit: int = typer.Option(10, "--limit", "-l", help="Number of contacts to return"),
-    offset: int = typer.Option(0, "--offset", "-o", help="Number of contacts to skip"),
+@app.command()
+def info(
+    contact_id: str = typer.Argument(..., help="Contact ID to get attributes for"),
 ):
     """
-    List contacts.
+    Get detailed attributes for a specific contact.
     """
     client = SpaceshipClient()
     try:
-        data = client.list_contacts(limit=limit, offset=offset)
+        data = client.get_contact_attributes(contact_id)
         
-        items = data.get("items", []) if isinstance(data, dict) else data
-
-        if not items:
-            console.print("No contacts found.")
+        # Response is a list of {"name": "...", "value": "..."}
+        if not data:
+            console.print("No attributes found for this contact.")
             return
 
-        table = Table(title="Contacts")
-        table.add_column("ID", style="cyan")
-        table.add_column("First Name", style="magenta")
-        table.add_column("Last Name", style="magenta")
-        table.add_column("Email", style="green")
+        table = Table(title=f"Contact Attributes: {contact_id}")
+        table.add_column("Attribute", style="cyan")
+        table.add_column("Value", style="green")
 
-        for item in items:
-            table.add_row(
-                str(item.get("id", "N/A")),
-                item.get("firstName", "N/A"),
-                item.get("lastName", "N/A"),
-                item.get("email", "N/A")
-            )
+        for item in data:
+            attr_name = item.get("name", "N/A")
+            attr_value = item.get("value", "N/A")
+            table.add_row(attr_name, str(attr_value))
 
         console.print(table)
 
     except Exception as e:
-        console.print(f"[red]Error fetching contacts:[/red] {e}")
+        console.print(f"[red]Error fetching contact info:[/red] {e}")

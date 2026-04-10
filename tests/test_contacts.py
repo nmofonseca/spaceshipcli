@@ -13,23 +13,24 @@ from spaceship_cli.main import app
 runner = CliRunner()
 
 @respx.mock
-def test_list_contacts_success():
+def test_get_contact_attributes():
+    contact_id = "test_id_123"
     # Mock the API response
-    route = respx.get("https://spaceship.dev/api/v1/contacts").mock(
+    route = respx.get(f"https://spaceship.dev/api/v1/contacts/attributes/{contact_id}").mock(
         return_value=Response(
             200, 
-            json={
-                "items": [
-                    {"id": "c1", "firstName": "John", "lastName": "Doe", "email": "john@example.com"},
-                    {"id": "c2", "firstName": "Jane", "lastName": "Smith", "email": "jane@example.com"}
-                ]
-            }
+            json=[
+                {"name": "firstName", "value": "Alice"},
+                {"name": "lastName", "value": "Wonderland"},
+                {"name": "email", "value": "alice@example.com"}
+            ]
         )
     )
 
-    result = runner.invoke(app, ["contacts", "list"])
+    result = runner.invoke(app, ["contacts", "info", contact_id])
     
     assert result.exit_code == 0
-    assert "John" in result.stdout
-    assert "jane@example.com" in result.stdout
+    assert "Alice" in result.stdout
+    assert "Wonderland" in result.stdout
+    assert "alice@example.com" in result.stdout
     assert route.called

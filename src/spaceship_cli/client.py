@@ -24,15 +24,15 @@ class SpaceshipClient:
             response.raise_for_status()
             return response.json()
 
-    def list_domains(self, limit: int = 10, offset: int = 0):
+    def list_domains(self, limit: int = 10, offset: int = 0, order_by: str = None):
         """
         List domains.
-        Note: Adjust endpoint based on actual API docs if different from /domains.
-        Ref: https://docs.spaceship.dev/
+        Endpoint: GET /v1/domains
         """
-        # Based on standard REST patterns, assuming /domains.
-        # I will check exact path if needed, but assuming /domains for now as placeholder.
-        return self._get("/domains", params={"take": limit, "skip": offset})
+        params = {"take": limit, "skip": offset}
+        if order_by:
+            params["orderBy"] = order_by
+        return self._get("/domains", params=params)
 
     def list_dns_records(self, domain: str, limit: int = 100, offset: int = 0, order_by: str = None):
         """
@@ -51,12 +51,12 @@ class SpaceshipClient:
         """
         return self._get(f"/domains/{domain}")
 
-    def list_contacts(self, limit: int = 10, offset: int = 0):
+    def get_contact_attributes(self, contact_id: str):
         """
-        List contacts.
-        Endpoint: GET /v1/contacts
+        Read attribute details by contact ID.
+        Endpoint: GET /v1/contacts/attributes/{contactId}
         """
-        return self._get("/contacts", params={"take": limit, "skip": offset})
+        return self._get(f"/contacts/attributes/{contact_id}")
 
     def check_availability(self, domains: list[str]):
         """
@@ -65,3 +65,24 @@ class SpaceshipClient:
         Body: {"domains": ["example.com", ...]}
         """
         return self._post("/domains/available", json={"domains": domains})
+
+    def get_personal_nameservers(self, domain: str):
+        """
+        Get personal nameservers on a domain.
+        Endpoint: GET /v1/domains/{domain}/personal-nameservers
+        """
+        return self._get(f"/domains/{domain}/personal-nameservers")
+
+    def get_domain_transfer(self, domain: str):
+        """
+        Get the details of the domain transfer.
+        Endpoint: GET /v1/domains/{domain}/transfer
+        """
+        return self._get(f"/domains/{domain}/transfer")
+
+    def get_domain_auth_code(self, domain: str):
+        """
+        Get domain auth code.
+        Endpoint: GET /v1/domains/{domain}/transfer/auth-code
+        """
+        return self._get(f"/domains/{domain}/transfer/auth-code")

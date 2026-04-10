@@ -35,11 +35,15 @@ The cli should do the following:
 - Read API keys either from the .env file or from environment variables, SPACESHIP_API_KEY and SPACESHIP_API_SECRET, if not set provide return informing the user the fact SECRET and KEY are not ser, more information https://docs.spaceship.dev/#section/Spaceship-API/Authentication
 - Include a help command that outputs information on how to use the cli
 - I want to be able to do the following actions using the cli:
-  - Get a list of domains
-  - Get information for 1 domain or all domains
-  - Check single domain availability
-  - Get personal nameservers on a domain
-  - Get domain resource records list
+  - Get/List operations to implement:
+    - Get a list of domains
+    - Get information for 1 domain or all domains
+    - Check domains availability for registration
+    - Get personal nameservers on a domain
+    - Get personal nameservers configuration (This is not available yet, currently returns HTTP 501, so please ignore)
+    - Get the details of the domain transfer
+    - Get domain auth code
+    - Get domain resource records list
 - The cli should be an executable in the end, compiled binary
 - Please create tests that allow to test cli functionality every code change.
 

@@ -11,13 +11,14 @@ console = Console()
 def list_domains(
     limit: int = typer.Option(10, "--limit", "-l", help="Number of domains to return"),
     offset: int = typer.Option(0, "--offset", "-o", help="Number of domains to skip"),
+    order_by: Optional[str] = typer.Option(None, "--order-by", help="Sort order (e.g., 'name', '-name', 'expirationDate')"),
 ):
     """
     List domains.
     """
     client = SpaceshipClient()
     try:
-        data = client.list_domains(limit=limit, offset=offset)
+        data = client.list_domains(limit=limit, offset=offset, order_by=order_by)
         
         # Assuming the response has a structure like {'items': [...], 'totalCount': ...}
         # or it is a list. I will handle generic json first.
@@ -38,7 +39,8 @@ def list_domains(
             # Adjust keys based on actual response payload.
             # Common keys: name, status, expirationDate
             name = item.get("name", "N/A")
-            status = item.get("status", "N/A") 
+            # Use 'lifecycleStatus' based on docs
+            status = item.get("lifecycleStatus") or item.get("status") or "N/A"
             expiration = item.get("expirationDate", "N/A")
             table.add_row(name, str(status), str(expiration))
 
@@ -108,3 +110,83 @@ def check(
 
     except Exception as e:
         console.print(f"[red]Error checking availability:[/red] {e}")
+
+@app.command()
+def nameservers(
+    domain: str = typer.Argument(..., help="Domain to get personal nameservers for"),
+):
+    """
+    Get personal nameservers for a specific domain.
+    """
+    client = SpaceshipClient()
+    try:
+        data = client.get_personal_nameservers(domain)
+        
+        # Response structure: {"records": [{"host": "ns1", "ips": ["..."]}, ...]}
+        records = data.get("records", []) if isinstance(data, dict) else data
+
+        if not records:
+            console.print(f"No personal nameservers found for {domain}.")
+            return
+
+        table = Table(title=f"Personal Nameservers: {domain}")
+        table.add_column("Host", style="cyan")
+        table.add_column("IPs", style="green")
+
+        for record in records:
+            host = record.get("host", "N/A")
+            ips = record.get("ips", [])
+            table.add_row(host, ", ".join(ips))
+
+        console.print(table)
+
+    except Exception as e:
+        console.print(f"[red]Error fetching nameservers:[/red] {e}")
+
+@app.command(name="transfer")
+def transfer_info(
+    domain: str = typer.Argument(..., help="Domain to get transfer details for"),
+):
+    """
+    Get the details of the domain transfer.
+    """
+    client = SpaceshipClient()
+    try:
+        data = client.get_domain_transfer(domain)
+        
+        table = Table(title=f"Transfer Details: {domain}", show_header=False)
+        table.add_column("Property", style="cyan")
+        table.add_column("Value")
+
+        # Fields: startedAt, finishedAt, direction, status
+        for key, value in data.items():
+            table.add_row(key, str(value))
+
+        console.print(table)
+
+    except Exception as e:
+        console.print(f"[red]Error fetching transfer info:[/red] {e}")
+
+@app.command(name="auth-code")
+def auth_code(
+    domain: str = typer.Argument(..., help="Domain to get auth code for"),
+):
+    """
+    Get domain auth code (EPP code).
+    """
+    client = SpaceshipClient()
+    try:
+        data = client.get_domain_auth_code(domain)
+        
+        table = Table(title=f"Auth Code: {domain}", show_header=False)
+        table.add_column("Property", style="cyan")
+        table.add_column("Value", style="bold green")
+
+        # Fields: authCode, expires
+        for key, value in data.items():
+            table.add_row(key, str(value))
+
+        console.print(table)
+
+    except Exception as e:
+        console.print(f"[red]Error fetching auth code:[/red] {e}")

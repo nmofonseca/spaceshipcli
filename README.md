@@ -63,6 +63,16 @@ List domains:
 uv run spaceship domains list
 ```
 
+**Options:**
+- `-l, --limit INTEGER`: Number of domains to return (default: 10).
+- `-o, --offset INTEGER`: Number of domains to skip (default: 0).
+- `--order-by TEXT`: Sort order. Supported values: `name`, `-name`, `expirationDate`, `-expirationDate`, etc.
+
+**Example:**
+```bash
+uv run spaceship domains list --limit 5 --order-by expirationDate
+```
+
 Get domain info:
 ```bash
 uv run spaceship domains info example.com
@@ -72,6 +82,23 @@ Check domain availability:
 ```bash
 uv run spaceship domains check example.com another-domain.net
 ```
+
+Get personal nameservers:
+```bash
+uv run spaceship domains nameservers example.com
+```
+
+Get transfer details:
+```bash
+uv run spaceship domains transfer example.com
+```
+
+Get auth code (EPP):
+```bash
+uv run spaceship domains auth-code example.com
+```
+
+> **Note:** The `transfer` and `auth-code` commands have been implemented based on the API specification but have not yet been tested in a production environment.
 
 ### DNS
 
@@ -93,9 +120,17 @@ uv run spaceship dns list -d example.com --limit 20 --order-by -name
 
 ### Contacts
 
-List contacts:
+Get detailed attributes for a specific contact:
 ```bash
-uv run spaceship contacts list
+uv run spaceship contacts info [CONTACT_ID]
+```
+
+**Arguments:**
+- `CONTACT_ID`: The unique identifier of the contact (e.g., `1ZdMXpapqp9sle5dl8BlppTJXAzf5`). [required]
+
+**Example:**
+```bash
+uv run spaceship contacts info 1ZdMXpapqp9sle5dl8BlppTJXAzf5
 ```
 
 ## Development
