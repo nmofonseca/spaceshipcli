@@ -43,6 +43,7 @@ The cli should do the following:
 
 - Read API keys either from the .env file or from environment variables, SPACESHIP_API_KEY and SPACESHIP_API_SECRET, if not set provide return informing the user the fact SECRET and KEY are not ser, more information https://docs.spaceship.dev/#section/Spaceship-API/Authentication
 - Include a help command that outputs information on how to use the cli
+- Commands must support output formatting. The default format should be human-readable rich tables. A `--format json` flag must be available on all commands to output raw JSON responses.
 - I want to be able to do the following actions using the cli:
   - Get/List operations to implement:
     - Get a list of domains
