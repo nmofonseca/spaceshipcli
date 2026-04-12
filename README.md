@@ -62,6 +62,15 @@ You can also use the `--help` flag on any specific command to see its usage:
 uv run spaceship domains --help
 ```
 
+### Output Formatting
+
+By default, all commands output data as formatted, human-readable terminal tables. 
+You can output raw JSON instead by passing the `--format json` option to any command:
+
+```bash
+uv run spaceship domains list --format json
+```
+
 ### Building Standalone Binary
 
 To build a standalone executable that doesn't require Python or `uv` to be installed on the target machine:

@@ -34,3 +34,12 @@ def test_get_contact_attributes():
     assert "Wonderland" in result.stdout
     assert "alice@example.com" in result.stdout
     assert route.called
+@respx.mock
+def test_get_contact_attributes_json():
+    contact_id = "test_id_123"
+    respx.get(f"https://spaceship.dev/api/v1/contacts/attributes/{contact_id}").mock(
+        return_value=Response(200, json=[{"name": "firstName", "value": "JSONBob"}])
+    )
+    result = runner.invoke(app, ["contacts", "info", contact_id, "--format", "json"])
+    assert result.exit_code == 0
+    assert "\"JSONBob\"" in result.stdout

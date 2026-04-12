@@ -139,3 +139,13 @@ def test_get_domain_auth_code():
     assert result.exit_code == 0
     assert "secret123" in result.stdout
     assert "2024-02-01" in result.stdout
+
+@respx.mock
+def test_list_domains_json():
+    respx.get("https://spaceship.dev/api/v1/domains").mock(
+        return_value=Response(200, json={"items": [{"name": "json-test.com"}], "total": 1})
+    )
+    result = runner.invoke(app, ["domains", "list", "--format", "json"])
+    assert result.exit_code == 0
+    assert "\"json-test.com\"" in result.stdout
+    assert "\"total\": 1" in result.stdout

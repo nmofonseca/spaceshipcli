@@ -54,3 +54,13 @@ def test_list_dns_records_empty():
     
     assert result.exit_code == 0
     assert f"No DNS records found for {domain}." in result.stdout
+
+@respx.mock
+def test_list_dns_records_json():
+    domain = "example.com"
+    respx.get(f"https://spaceship.dev/api/v1/dns/records/{domain}").mock(
+        return_value=Response(200, json={"items": [{"type": "A", "address": "1.1.1.1"}], "total": 1})
+    )
+    result = runner.invoke(app, ["dns", "list", "--domain", domain, "--format", "json"])
+    assert result.exit_code == 0
+    assert "\"1.1.1.1\"" in result.stdout

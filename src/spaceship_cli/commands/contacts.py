@@ -9,6 +9,7 @@ console = Console()
 @app.command()
 def info(
     contact_id: str = typer.Argument(..., help="Contact ID to get attributes for"),
+    format: str = typer.Option("table", "--format", help="Output format: table or json"),
 ):
     """
     Get detailed attributes for a specific contact.
@@ -17,6 +18,10 @@ def info(
     try:
         data = client.get_contact_attributes(contact_id)
         
+        if format == "json":
+            console.print_json(data=data)
+            return
+
         # Response is a list of {"name": "...", "value": "..."}
         if not data:
             console.print("No attributes found for this contact.")

@@ -13,6 +13,7 @@ def list_dns(
     limit: int = typer.Option(100, "--limit", "-l", help="Number of records to return"),
     offset: int = typer.Option(0, "--offset", "-o", help="Number of records to skip"),
     order_by: Optional[str] = typer.Option(None, "--order-by", help="Sort order (e.g., 'name', '-name', 'type', '-type')"),
+    format: str = typer.Option("table", "--format", help="Output format: table or json"),
 ):
     """
     List DNS records for a domain.
@@ -21,6 +22,10 @@ def list_dns(
     try:
         data = client.list_dns_records(domain=domain, limit=limit, offset=offset, order_by=order_by)
         
+        if format == "json":
+            console.print_json(data=data)
+            return
+
         # Adjust based on response structure.
         items = data.get("items", []) if isinstance(data, dict) else data
 

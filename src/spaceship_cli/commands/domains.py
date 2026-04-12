@@ -12,6 +12,7 @@ def list_domains(
     limit: int = typer.Option(10, "--limit", "-l", help="Number of domains to return"),
     offset: int = typer.Option(0, "--offset", "-o", help="Number of domains to skip"),
     order_by: Optional[str] = typer.Option(None, "--order-by", help="Sort order (e.g., 'name', '-name', 'expirationDate')"),
+    format: str = typer.Option("table", "--format", help="Output format: table or json"),
 ):
     """
     List domains.
@@ -24,6 +25,10 @@ def list_domains(
         # or it is a list. I will handle generic json first.
         # Docs usually specify a wrapper.
         
+        if format == "json":
+            console.print_json(data=data)
+            return
+
         items = data.get("items", []) if isinstance(data, dict) else data
 
         if not items:
@@ -52,6 +57,7 @@ def list_domains(
 @app.command()
 def info(
     domain: str = typer.Argument(..., help="Domain name to get info for"),
+    format: str = typer.Option("table", "--format", help="Output format: table or json"),
 ):
     """
     Get detailed information for a specific domain.
@@ -60,6 +66,10 @@ def info(
     try:
         data = client.get_domain_info(domain)
         
+        if format == "json":
+            console.print_json(data=data)
+            return
+
         table = Table(title=f"Domain Info: {domain}", show_header=False)
         table.add_column("Property", style="bold cyan")
         table.add_column("Value")
@@ -76,6 +86,7 @@ def info(
 @app.command()
 def check(
     names: list[str] = typer.Argument(..., help="Domain names to check availability for"),
+    format: str = typer.Option("table", "--format", help="Output format: table or json"),
 ):
     """
     Check if one or more domains are available for registration.
@@ -84,6 +95,10 @@ def check(
     try:
         data = client.check_availability(names)
         
+        if format == "json":
+            console.print_json(data=data)
+            return
+
         # Response structure: {"domains": [{"domain": "name", "result": "available", ...}]}
         items = data.get("domains", []) if isinstance(data, dict) else data
 
@@ -114,6 +129,7 @@ def check(
 @app.command()
 def nameservers(
     domain: str = typer.Argument(..., help="Domain to get personal nameservers for"),
+    format: str = typer.Option("table", "--format", help="Output format: table or json"),
 ):
     """
     Get personal nameservers for a specific domain.
@@ -122,6 +138,10 @@ def nameservers(
     try:
         data = client.get_personal_nameservers(domain)
         
+        if format == "json":
+            console.print_json(data=data)
+            return
+
         # Response structure: {"records": [{"host": "ns1", "ips": ["..."]}, ...]}
         records = data.get("records", []) if isinstance(data, dict) else data
 
@@ -146,6 +166,7 @@ def nameservers(
 @app.command(name="transfer")
 def transfer_info(
     domain: str = typer.Argument(..., help="Domain to get transfer details for"),
+    format: str = typer.Option("table", "--format", help="Output format: table or json"),
 ):
     """
     Get the details of the domain transfer.
@@ -154,6 +175,10 @@ def transfer_info(
     try:
         data = client.get_domain_transfer(domain)
         
+        if format == "json":
+            console.print_json(data=data)
+            return
+
         table = Table(title=f"Transfer Details: {domain}", show_header=False)
         table.add_column("Property", style="cyan")
         table.add_column("Value")
@@ -170,6 +195,7 @@ def transfer_info(
 @app.command(name="auth-code")
 def auth_code(
     domain: str = typer.Argument(..., help="Domain to get auth code for"),
+    format: str = typer.Option("table", "--format", help="Output format: table or json"),
 ):
     """
     Get domain auth code (EPP code).
@@ -178,6 +204,10 @@ def auth_code(
     try:
         data = client.get_domain_auth_code(domain)
         
+        if format == "json":
+            console.print_json(data=data)
+            return
+
         table = Table(title=f"Auth Code: {domain}", show_header=False)
         table.add_column("Property", style="cyan")
         table.add_column("Value", style="bold green")
