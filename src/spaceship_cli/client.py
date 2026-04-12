@@ -1,8 +1,17 @@
 import httpx
+import typer
 from spaceship_cli.config import settings
 
 class SpaceshipClient:
     def __init__(self):
+        if not settings.api_key or not settings.api_secret:
+            typer.secho(
+                "Error: SPACESHIP_API_KEY and SPACESHIP_API_SECRET environment variables must be set.",
+                fg=typer.colors.RED,
+                err=True
+            )
+            raise typer.Exit(code=1)
+
         self.base_url = settings.base_url
         self.headers = {
             "X-Api-Key": settings.api_key,

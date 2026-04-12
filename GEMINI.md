@@ -22,6 +22,15 @@
 - **Imports**: Organize imports according to PEP 8 (standard library, third-party, local application).
 - **Complexity**: Keep functions small and focused on a single task.
 
+## Docker Best Practices
+
+- **Multi-stage Builds**: The `Dockerfile` employs a two-stage build process to keep the final image size minimal.
+  - **Stage 1 (Builder)**: Uses `python:3.12-slim-bookworm` to install dependencies via `uv`, sync the project, and compile the application into a standalone binary using PyInstaller.
+  - **Stage 2 (Runtime)**: Uses a minimal `debian:bookworm-slim` base image.
+- **Security**: The runtime container operates under a dedicated, non-root user (`spaceshipcli`) to adhere to the principle of least privilege.
+- **Minimal Footprint**: Only the compiled PyInstaller binary and necessary `ca-certificates` (for secure API requests) are copied to the runtime stage.
+- **Build Caching**: The `uv` dependency installation is separated from the source code copy (`uv sync --frozen --no-install-project` run beforehand) to leverage Docker layer caching efficiently.
+
 # Description of Project
 
 I would like to create a cli tool in Python to interact with the api of spaceship.com a domain registration and web services platform, they have an API that can be used to interact with their service, unfortunately there is no cli to interact with the API's

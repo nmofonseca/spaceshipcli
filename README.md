@@ -46,6 +46,22 @@ SPACESHIP_API_SECRET=your_api_secret
 
 Run the CLI using `uv run spaceship`.
 
+### Getting Help
+
+To see the available commands and options, you can run the CLI without any arguments or use the `--help` flag:
+
+```bash
+uv run spaceship
+# or
+uv run spaceship --help
+```
+
+You can also use the `--help` flag on any specific command to see its usage:
+
+```bash
+uv run spaceship domains --help
+```
+
 ### Building Standalone Binary
 
 To build a standalone executable that doesn't require Python or `uv` to be installed on the target machine:
@@ -55,6 +71,22 @@ uv run pyinstaller --onefile --name spaceship --clean src/spaceship_cli/main.py
 ```
 
 The binary will be created in the `dist/` directory.
+
+### Running via Docker
+
+You can also run the CLI as a Docker container. The Dockerfile uses a multi-stage build to package the standalone binary into a minimal runtime image.
+
+Build the Docker image:
+
+```bash
+docker build -t spaceshipcli .
+```
+
+Run the container, passing your API credentials as environment variables:
+
+```bash
+docker run --rm -e SPACESHIP_API_KEY=your_api_key -e SPACESHIP_API_SECRET=your_api_secret spaceshipcli domains list
+```
 
 ### Domains
 

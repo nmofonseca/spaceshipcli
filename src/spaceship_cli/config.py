@@ -1,9 +1,10 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
+from typing import Optional
 
 class Settings(BaseSettings):
-    api_key: str = Field(..., alias="SPACESHIP_API_KEY")
-    api_secret: str = Field(..., alias="SPACESHIP_API_SECRET")
+    api_key: Optional[str] = Field(default=None, alias="SPACESHIP_API_KEY")
+    api_secret: Optional[str] = Field(default=None, alias="SPACESHIP_API_SECRET")
     base_url: str = "https://spaceship.dev/api/v1"
 
     model_config = SettingsConfigDict(
