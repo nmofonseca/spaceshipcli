@@ -175,7 +175,9 @@ def test_get_domain_auth_code() -> None:
 def test_list_domains_json() -> None:
     """Test domain listing in JSON format."""
     respx.get("https://spaceship.dev/api/v1/domains").mock(
-        return_value=Response(200, json={"items": [{"name": "json-test.com"}], "total": 1})
+        return_value=Response(
+            200, json={"items": [{"name": "json-test.com"}], "total": 1}
+        )
     )
     result = runner.invoke(app, ["domains", "list", "--format", "json"])
     assert result.exit_code == 0
