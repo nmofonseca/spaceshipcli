@@ -2,7 +2,7 @@
 
 ## General Instructions
 
-- Documentation for spaceship.com public API should be read from here: https://docs.spaceship.dev/
+- Documentation for spaceship.com public API should be read from here: <https://docs.spaceship.dev/>
 - The online public API documentation should be the source in how to interact with the api's for different action, e.g. list domains, create DNS records, update DNS records, etc..
 - Python Language should be used to create the tool or cli for interacting with the api
 - Follow the existing condig style for all modifications
@@ -31,17 +31,17 @@
 - **Minimal Footprint**: Only the compiled PyInstaller binary and necessary `ca-certificates` (for secure API requests) are copied to the runtime stage.
 - **Build Caching**: The `uv` dependency installation is separated from the source code copy (`uv sync --frozen --no-install-project` run beforehand) to leverage Docker layer caching efficiently.
 
-# Description of Project
+## Description of Project
 
 I would like to create a cli tool in Python to interact with the api of spaceship.com a domain registration and web services platform, they have an API that can be used to interact with their service, unfortunately there is no cli to interact with the API's
 
-The API documentation is available here which you can read: https://docs.spaceship.dev/, this has documentation about the API.
+The API documentation is available here which you can read: <https://docs.spaceship.dev/>, this has documentation about the API.
 
-# Requirements
+## Requirements
 
 The cli should do the following:
 
-- Read API keys either from the .env file or from environment variables, SPACESHIP_API_KEY and SPACESHIP_API_SECRET, if not set provide return informing the user the fact SECRET and KEY are not ser, more information https://docs.spaceship.dev/#section/Spaceship-API/Authentication
+- Read API keys either from the .env file or from environment variables, SPACESHIP_API_KEY and SPACESHIP_API_SECRET, if not set provide return informing the user the fact SECRET and KEY are not ser, more information <https://docs.spaceship.dev/#section/Spaceship-API/Authentication>
 - Include a help command that outputs information on how to use the cli
 - Commands must support output formatting. The default format should be human-readable rich tables. A `--format json` flag must be available on all commands to output raw JSON responses.
 - I want to be able to do the following actions using the cli:
@@ -56,4 +56,3 @@ The cli should do the following:
     - Get domain resource records list
 - The cli should be an executable in the end, compiled binary
 - Please create tests that allow to test cli functionality every code change.
-

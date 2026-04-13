@@ -1,3 +1,4 @@
+---
 name: Lint Code Base
 
 on:
@@ -26,20 +27,24 @@ jobs:
 
       - name: Lint Code Base
         # Using slim image, pinned to v8.6.0
-        uses: super-linter/super-linter/slim@9e863354e3ff62e0727d37183162c4a88873df41 # v8.6.0
+        uses: >-
+          super-linter/super-linter/slim@9e863354e3ff62e0727d37183162c4a88873df41
+        # v8.6.0
         env:
           # Validate all files on push and manual run, but only changed files on PR
-          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-          # Dynamically set the default branch to the current branch name (e.g., develop)
+          VALIDATE_ALL_CODEBASE: >-
+            ${{ github.event_name == 'push' ||
+                github.event_name == 'workflow_dispatch' }}
+          # Dynamically set the default branch to the current branch name
           DEFAULT_BRANCH: ${{ github.ref_name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
           # Python Linters
           VALIDATE_PYTHON_BLACK: true
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_PYTHON_PYLINT: true
           VALIDATE_PYTHON_MYPY: true
-          
+
           # Other applicable project files
           VALIDATE_DOCKERFILE_HADOLINT: true
           VALIDATE_MARKDOWN: true

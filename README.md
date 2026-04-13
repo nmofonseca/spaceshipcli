@@ -64,7 +64,7 @@ uv run spaceship domains --help
 
 ### Output Formatting
 
-By default, all commands output data as formatted, human-readable terminal tables. 
+By default, all commands output data as formatted, human-readable terminal tables.
 You can output raw JSON instead by passing the `--format json` option to any command:
 
 ```bash

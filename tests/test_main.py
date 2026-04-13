@@ -1,9 +1,14 @@
+"""
+Tests for main entry point.
+"""
+
 from typer.testing import CliRunner
 from spaceship_cli.main import app
 
 runner = CliRunner()
 
-def test_app_no_args_shows_help():
+
+def test_app_no_args_shows_help() -> None:
     """Test that running the app without arguments shows the help/usage."""
     result = runner.invoke(app, [])
     # Since no_args_is_help=True, it will exit with code 0 or 2 depending on typer version

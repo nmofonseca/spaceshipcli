@@ -1,3 +1,7 @@
+"""
+Main entry point for the Spaceship CLI.
+"""
+
 import typer
 from spaceship_cli.commands import domains, dns, contacts
 
@@ -5,7 +9,8 @@ app = typer.Typer(
     name="spaceship",
     help="""Spaceship.com CLI Tool
 
-Note: This tool requires the SPACESHIP_API_KEY and SPACESHIP_API_SECRET environment variables to be set in order to interact with the API.""",
+Note: This tool requires the SPACESHIP_API_KEY and SPACESHIP_API_SECRET
+environment variables to be set in order to interact with the API.""",
     add_completion=False,
     no_args_is_help=True,
 )
