@@ -26,6 +26,9 @@ jobs:
 
       - name: Run pytest
         run: uv run pytest
+        env:
+          SPACESHIP_API_KEY: "dummy_ci_key"
+          SPACESHIP_API_SECRET: "dummy_ci_secret"
 
   build-binary:
     name: Build Standalone Binary
