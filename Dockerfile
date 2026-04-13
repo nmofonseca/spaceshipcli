@@ -5,7 +5,7 @@ FROM python:3.12-slim-bookworm AS builder
 # Consolidate RUN and remove cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential=12.9 \
-    curl=7.88.1-10+deb12u8 \
+    curl=7.88.1-10+deb12u14 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for fast dependency resolution and installation
@@ -39,7 +39,7 @@ RUN groupadd -r spaceshipcli && useradd -r -g spaceshipcli spaceshipcli
 
 # Install ca-certificates to ensure httpx can make HTTPS requests to the Spaceship API
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates=20230311 \
+    ca-certificates=20230311+deb12u1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
