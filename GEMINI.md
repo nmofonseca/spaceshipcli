@@ -21,6 +21,14 @@
 - **Compatibility**: Should target Python 3.10 and higher versions.
 - **Imports**: Organize imports according to PEP 8 (standard library, third-party, local application).
 - **Complexity**: Keep functions small and focused on a single task.
+- **Quality Score**: Maintain a Pylint score of 10/10 for all production and test code.
+
+## CI/CD and Code Quality
+
+- **Automated Linting**: A GitHub Action using `super-linter` (slim version) is used to enforce code quality on every push to `develop` and on every pull request to `main`.
+- **Linter Configuration**: The following linters must be active and passing: `black`, `ruff`, `pylint`, `mypy`, `hadolint` (Docker), `markdownlint`, `yamllint`, and `jsonlint`.
+- **Action Security**: All GitHub Actions used in the pipeline must be pinned to a specific, immutable SHA digest rather than a mutable tag (e.g., use `actions/checkout@34e1148...` instead of `@v4`).
+- **Local Verification**: Before pushing changes, developers should verify code quality locally using the project's standardized `super-linter` Docker command.
 
 ## Docker Best Practices
 

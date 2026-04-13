@@ -176,7 +176,32 @@ uv run spaceship contacts info 1ZdMXpapqp9sle5dl8BlppTJXAzf5
 
 ## Development
 
-Run tests:
+### Linting
+
+This project uses `super-linter` to maintain high code quality standards. You should run the linter locally before pushing any changes to ensure the CI pipeline passes.
+
+Run the linter using Docker:
+
+```bash
+docker run --rm \
+  -e RUN_LOCAL=true \
+  -e VALIDATE_PYTHON_BLACK=true \
+  -e VALIDATE_PYTHON_RUFF=true \
+  -e VALIDATE_PYTHON_PYLINT=true \
+  -e VALIDATE_PYTHON_MYPY=true \
+  -e VALIDATE_DOCKERFILE_HADOLINT=true \
+  -e VALIDATE_MARKDOWN=true \
+  -e VALIDATE_YAML=true \
+  -e VALIDATE_JSON=true \
+  -e DEFAULT_BRANCH="develop" \
+  -v "$PWD":/tmp/lint \
+  ghcr.io/super-linter/super-linter:slim-v8.6.0
+```
+
+### Running tests
+
+Run the test suite using `uv`:
+
 ```bash
 uv run pytest
 ```
