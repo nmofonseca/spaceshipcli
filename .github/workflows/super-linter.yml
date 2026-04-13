@@ -30,6 +30,8 @@ jobs:
         env:
           # Validate all files on push and manual run, but only changed files on PR
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+          # Dynamically set the default branch to the current branch name (e.g., develop)
+          DEFAULT_BRANCH: ${{ github.ref_name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
           # Python Linters
