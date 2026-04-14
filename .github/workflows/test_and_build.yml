@@ -68,9 +68,16 @@ jobs:
           path: dist/spaceshipcli
 
   build-docker:
-    name: Build Docker Image
+    name: Build Docker Image (${{ matrix.platform }})
     needs: test
-    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: amd64
+          - runner: ubuntu-24.04-arm64
+            platform: arm64
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout Code
         uses: >-
@@ -89,6 +96,7 @@ jobs:
         with:
           context: .
           push: false
+          platforms: linux/${{ matrix.platform }}
           tags: spaceshipcli:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
