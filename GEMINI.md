@@ -39,6 +39,20 @@
 - **Security**: The runtime container operates under a dedicated, non-root user (`spaceshipcli`) to adhere to the principle of least privilege.
 - **Minimal Footprint**: Only the compiled PyInstaller binary and necessary `ca-certificates` (for secure API requests) are copied to the runtime stage.
 - **Build Caching**: The `uv` dependency installation is separated from the source code copy (`uv sync --frozen --no-install-project` run beforehand) to leverage Docker layer caching efficiently.
+- **Metadata**: Docker images must include OCI-compliant labels (Title, Description, Version, Source) provided via the `VERSION` build argument.
+
+## Automated Semantic Versioning
+
+- **Tooling**: [GitVersion](https://gitversion.net/) is used to automatically determine the semantic version of the application.
+- **Workflow**: The project uses a "Mainline" (Trunk-Based) versioning strategy.
+  - Every commit on `main` increments the version.
+  - `develop` and feature branches use pre-release labels (e.g., `-dev`, `-pr`).
+- **Conventional Commits**: Commit messages must follow the Conventional Commits specification to trigger correct version bumps:
+  - `feat:` or `feature:` -> Minor bump.
+  - `fix:` or `patch:` -> Patch bump.
+  - `break:`, `breaking:`, or `BREAKING CHANGE:` -> Major bump.
+- **CLI Implementation**: The application must provide a `--version` (and `-v`) flag that displays the version string in the format `spaceshipcli vX.Y.Z`. This should be implemented using `importlib.metadata` to read the version from the package.
+- **CI Orchestration**: The GitHub Actions pipeline must use a dedicated `versioning` job to provide a consistent version string to all subsequent build and deployment jobs.
 
 ## Description of Project
 
