@@ -122,6 +122,8 @@ jobs:
           - runner: ubuntu-24.04-arm
             platform: arm64
     runs-on: ${{ matrix.runner }}
+    env:
+      APP_VERSION: ${{ needs.versioning.outputs.app_version }}
     steps:
       - name: Checkout Code
         uses: >-
@@ -130,7 +132,7 @@ jobs:
 
       - name: Update pyproject.toml version
         run: |
-          sed -i -E "s/^version = \".*\"/version = \"${{ needs.versioning.outputs.app_version }}\"/" pyproject.toml
+          sed -i -E "s/^version = \".*\"/version = \"${{ env.APP_VERSION }}\"/" pyproject.toml
 
       - name: Set up Docker Buildx
         uses: >-
@@ -145,8 +147,10 @@ jobs:
           context: .
           push: false
           platforms: linux/${{ matrix.platform }}
+          build-args: |
+            VERSION=${{ env.APP_VERSION }}
           tags: |
             spaceshipcli:latest
-            spaceshipcli:${{ needs.versioning.outputs.app_version }}
+            spaceshipcli:${{ env.APP_VERSION }}
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}

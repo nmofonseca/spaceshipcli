@@ -34,6 +34,13 @@ RUN uv sync --frozen && \
 # Stage 2: Create the minimal runtime image
 FROM debian:bookworm-slim
 
+# Add OCI labels for metadata
+ARG VERSION
+LABEL org.opencontainers.image.title="spaceshipcli" \
+      org.opencontainers.image.description="Spaceship.com CLI Tool" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.source="https://github.com/nmofonseca/spaceshipcli"
+
 # Create a non-root user for security
 RUN groupadd -r spaceshipcli && useradd -r -g spaceshipcli spaceshipcli
 

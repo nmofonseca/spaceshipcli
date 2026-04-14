@@ -3,7 +3,17 @@ Main entry point for the Spaceship CLI.
 """
 
 import typer
+from importlib import metadata
 from spaceship_cli.commands import domains, dns, contacts
+
+def version_callback(value: bool):
+    """
+    Return the version of the application.
+    """
+    if value:
+        version = metadata.version("spaceship-cli")
+        typer.echo(f"spaceshipcli v{version}")
+        raise typer.Exit()
 
 app = typer.Typer(
     name="spaceship",
@@ -14,6 +24,22 @@ environment variables to be set in order to interact with the API.""",
     add_completion=False,
     no_args_is_help=True,
 )
+
+@app.callback()
+def main(
+    version: bool = typer.Option(
+        None,
+        "--version",
+        "-v",
+        help="Display the version of the application",
+        callback=version_callback,
+        is_eager=True,
+    ),
+):
+    """
+    Main entry point for the Spaceship CLI.
+    """
+    pass
 
 app.add_typer(domains.app, name="domains", help="Manage domains")
 app.add_typer(dns.app, name="dns", help="Manage DNS records")
