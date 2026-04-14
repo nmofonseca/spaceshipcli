@@ -28,6 +28,7 @@
 - **Automated Linting**: A GitHub Action using `super-linter` (slim version) is used to enforce code quality on every push to `develop` and on every pull request to `main`.
 - **Linter Configuration**: The following linters must be active and passing: `black`, `ruff`, `pylint`, `mypy`, `hadolint` (Docker), `markdownlint`, `yamllint`, and `jsonlint`.
 - **Action Security**: All GitHub Actions used in the pipeline must be pinned to a specific, immutable SHA digest rather than a mutable tag (e.g., use `actions/checkout@34e1148...` instead of `@v4`).
+  - **Pinning Syntax**: To comply with the 80-character line length limit enforced by `yamllint`, long action strings should be declared using the YAML folded block scalar (`>-`) syntax. This keeps the SHA digest on its own line and allows for a version comment on the following line for readability.
 - **Local Verification**: Before pushing changes, developers should verify code quality locally using the project's standardized `super-linter` Docker command.
 
 ## Docker Best Practices
