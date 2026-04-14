@@ -3,7 +3,7 @@ name: Test and Build
 
 on:
   push:
-    branches: [develop]
+    branches: [main, develop]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -34,10 +34,40 @@ jobs:
           SPACESHIP_API_KEY: "dummy_ci_key"
           SPACESHIP_API_SECRET: "dummy_ci_secret"
 
+  versioning:
+    name: Determine Version
+    runs-on: ubuntu-24.04
+    outputs:
+      app_version: ${{ steps.gitversion.outputs.SemVer }}
+    steps:
+      - name: Checkout Code
+        uses: >-
+          actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: >-
+          gittools/actions/gitversion/setup@86745835662767c9d3c1997be540470224536076
+        # v6.1.1
+        with:
+          versionSpec: '6.x'
+
+      - name: Determine Version
+        id: gitversion
+        uses: >-
+          gittools/actions/gitversion/execute@097403fd3007a1c12e5974a2a07e039a599966bc
+        # v6.1.1
+
   build-binary:
     name: Build Standalone Binary
-    needs: test
+    needs: [test, versioning]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      APP_VERSION: ${{ needs.versioning.outputs.app_version }}
     steps:
       - name: Checkout Code
         uses: >-
@@ -54,22 +84,36 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Update pyproject.toml version
+        run: |
+          sed -i -E "s/^version = \".*\"/version = \"${{ env.APP_VERSION }}\"/" pyproject.toml
+
       - name: Build binary
         run: >-
-          uv run pyinstaller --onefile --name spaceshipcli --clean
+          uv run pyinstaller --onefile --name "spaceshipcli-v${{ env.APP_VERSION }}-linux-amd64" --clean
           src/spaceship_cli/main.py
+
+      - name: Commit and Tag Release (Main Only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml
+          git commit -m "chore: release v${{ env.APP_VERSION }} [skip ci]"
+          git tag "v${{ env.APP_VERSION }}"
+          git push origin main --tags
 
       - name: Upload Artifact
         uses: >-
           actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         # v7.0.1
         with:
-          name: spaceshipcli-binary
-          path: dist/spaceshipcli
+          name: spaceshipcli-v${{ env.APP_VERSION }}-linux-amd64
+          path: dist/spaceshipcli-v${{ env.APP_VERSION }}-linux-amd64
 
   build-docker:
     name: Build Docker Image (${{ matrix.platform }})
-    needs: test
+    needs: [test, versioning]
     strategy:
       matrix:
         include:
@@ -84,6 +128,10 @@ jobs:
           actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         # v4.3.1
 
+      - name: Update pyproject.toml version
+        run: |
+          sed -i -E "s/^version = \".*\"/version = \"${{ needs.versioning.outputs.app_version }}\"/" pyproject.toml
+
       - name: Set up Docker Buildx
         uses: >-
           docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd
@@ -97,6 +145,8 @@ jobs:
           context: .
           push: false
           platforms: linux/${{ matrix.platform }}
-          tags: spaceshipcli:latest
+          tags: |
+            spaceshipcli:latest
+            spaceshipcli:${{ needs.versioning.outputs.app_version }}
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}

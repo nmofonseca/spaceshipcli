@@ -1,0 +1,26 @@
+# GitVersion configuration for semantic versioning
+mode: Mainline
+next-version: 0.1.0
+major-version-bump-message: "^(break|breaking|major)(\\(.*\\))?:|BREAKING CHANGE:"
+minor-version-bump-message: "^(feat|feature)(\\(.*\\))?:"
+patch-version-bump-message: "^(fix|patch)(\\(.*\\))?:"
+branches:
+  main:
+    regex: ^master$|^main$
+    mode: ContinuousDelivery
+    tag: ''
+    increment: Patch
+    is-mainline: true
+  develop:
+    regex: ^dev(elop)?(ment)?$
+    mode: ContinuousDelivery
+    tag: dev
+    increment: Minor
+    is-mainline: false
+  pull-request:
+    regex: ^(pull|pull\-requests|pr)[/-]
+    mode: ContinuousDelivery
+    tag: pr
+    increment: Inherit
+    tag-number-pattern: '[/-](?<number>\d+)'
+    is-mainline: false
