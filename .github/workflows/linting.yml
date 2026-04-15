@@ -5,7 +5,7 @@ on:
   push:
     branches: [develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   workflow_dispatch:
 
 jobs:
@@ -38,8 +38,11 @@ jobs:
           VALIDATE_ALL_CODEBASE: >-
             ${{ github.event_name == 'push' ||
                 github.event_name == 'workflow_dispatch' }}
-          # Dynamically set the default branch to the current branch name
-          DEFAULT_BRANCH: ${{ github.ref_name }}
+          # Dynamically set the default branch for super-linter comparison
+          DEFAULT_BRANCH: >-
+            ${{ github.event_name == 'pull_request' &&
+                github.base_ref ||
+                github.ref_name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # Python Linters

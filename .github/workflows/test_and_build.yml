@@ -38,7 +38,7 @@ jobs:
     name: Determine Version
     runs-on: ubuntu-24.04
     outputs:
-      app_version: ${{ steps.gitversion.outputs.SemVer }}
+      pep440_version: ${{ steps.sanitize.outputs.pep440_version }}
     steps:
       - name: Checkout Code
         uses: >-
@@ -60,6 +60,14 @@ jobs:
           gittools/actions/gitversion/execute@bc6623af8fc07d5a8903052dd46da33403eec8e8
         # v4.5.0
 
+      - name: Sanitize Version (PEP 440)
+        id: sanitize
+        run: |
+          # Convert -dev.N to .devN and -pr.N to .devN for PEP 440 compliance
+          VERSION="${{ steps.gitversion.outputs.SemVer }}"
+          PEP440_VERSION=$(echo "$VERSION" | sed -E 's/-(dev|pr)\.?([0-9]+)/.dev\2/')
+          echo "pep440_version=$PEP440_VERSION" >> "$GITHUB_OUTPUT"
+
   build-binary:
     name: Build Standalone Binary (${{ matrix.platform }})
     needs: [test, versioning]
@@ -72,7 +80,7 @@ jobs:
             platform: arm64
     runs-on: ${{ matrix.runner }}
     env:
-      APP_VERSION: ${{ needs.versioning.outputs.app_version }}
+      APP_VERSION: ${{ needs.versioning.outputs.pep440_version }}
     steps:
       - name: Checkout Code
         uses: >-
@@ -118,7 +126,7 @@ jobs:
     permissions:
       contents: write
     env:
-      APP_VERSION: ${{ needs.versioning.outputs.app_version }}
+      APP_VERSION: ${{ needs.versioning.outputs.pep440_version }}
     steps:
       - name: Checkout Code
         uses: >-
@@ -170,7 +178,7 @@ jobs:
             platform: arm64
     runs-on: ${{ matrix.runner }}
     env:
-      APP_VERSION: ${{ needs.versioning.outputs.app_version }}
+      APP_VERSION: ${{ needs.versioning.outputs.pep440_version }}
     steps:
       - name: Checkout Code
         uses: >-
