@@ -61,11 +61,16 @@ jobs:
         # v4.5.0
 
   build-binary:
-    name: Build Standalone Binary
+    name: Build Standalone Binary (${{ matrix.platform }})
     needs: [test, versioning]
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: amd64
+          - runner: ubuntu-24.04-arm
+            platform: arm64
+    runs-on: ${{ matrix.runner }}
     env:
       APP_VERSION: ${{ needs.versioning.outputs.app_version }}
     steps:
@@ -90,11 +95,37 @@ jobs:
 
       - name: Build binary
         run: >-
-          uv run pyinstaller --onefile --name "spaceshipcli-v${{ env.APP_VERSION }}-linux-amd64" --clean
+          uv run pyinstaller --onefile --name "spaceshipcli-v${{ env.APP_VERSION }}-linux-${{ matrix.platform }}" --clean
           src/spaceship_cli/main.py
 
-      - name: Commit and Tag Release (Main Only)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      - name: Upload Artifact
+        uses: >-
+          actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        # v7.0.1
+        with:
+          name: spaceshipcli-v${{ env.APP_VERSION }}-linux-${{ matrix.platform }}
+          path: dist/spaceshipcli-v${{ env.APP_VERSION }}-linux-${{ matrix.platform }}
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-binary, versioning]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      APP_VERSION: ${{ needs.versioning.outputs.app_version }}
+    steps:
+      - name: Checkout Code
+        uses: >-
+          actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        # v6.0.2
+
+      - name: Update pyproject.toml version
+        run: |
+          sed -i -E "s/^version = \".*\"/version = \"${{ env.APP_VERSION }}\"/" pyproject.toml
+
+      - name: Commit and Tag Release
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -103,13 +134,24 @@ jobs:
           git tag "v${{ env.APP_VERSION }}"
           git push origin main --tags
 
-      - name: Upload Artifact
+      - name: Download Artifacts
         uses: >-
-          actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+          actions/download-artifact@cc2057357809939e00c1f388e276f028111c8467
         # v7.0.1
         with:
-          name: spaceshipcli-v${{ env.APP_VERSION }}-linux-amd64
-          path: dist/spaceshipcli-v${{ env.APP_VERSION }}-linux-amd64
+          path: artifacts
+          pattern: spaceshipcli-v*
+          merge-multiple: true
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "v${{ env.APP_VERSION }}"
+          ./artifacts/spaceshipcli-v${{ env.APP_VERSION }}-linux-amd64
+          ./artifacts/spaceshipcli-v${{ env.APP_VERSION }}-linux-arm64
+          --title "Release v${{ env.APP_VERSION }}"
+          --generate-notes
 
   build-docker:
     name: Build Docker Image (${{ matrix.platform }})
