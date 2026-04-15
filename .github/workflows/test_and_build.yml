@@ -91,11 +91,13 @@ jobs:
 
       - name: Update pyproject.toml version
         run: |
-          sed -i -E "s/^version = \".*\"/version = \"${{ env.APP_VERSION }}\"/" pyproject.toml
+          sed -i -E "s/^version = \".*\"/version = \"${{ env.APP_VERSION }}\"/" \
+            pyproject.toml
 
       - name: Build binary
         run: >-
-          uv run pyinstaller --onefile --name "spaceshipcli-v${{ env.APP_VERSION }}-linux-${{ matrix.platform }}" --clean
+          uv run pyinstaller --onefile --clean
+          --name "spaceshipcli-v${{ env.APP_VERSION }}-linux-${{ matrix.platform }}"
           src/spaceship_cli/main.py
 
       - name: Upload Artifact
@@ -103,8 +105,10 @@ jobs:
           actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         # v7.0.1
         with:
-          name: spaceshipcli-v${{ env.APP_VERSION }}-linux-${{ matrix.platform }}
-          path: dist/spaceshipcli-v${{ env.APP_VERSION }}-linux-${{ matrix.platform }}
+          name: >-
+            spaceshipcli-v${{ env.APP_VERSION }}-linux-${{ matrix.platform }}
+          path: >-
+            dist/spaceshipcli-v${{ env.APP_VERSION }}-linux-${{ matrix.platform }}
 
   create-release:
     name: Create GitHub Release
@@ -123,7 +127,8 @@ jobs:
 
       - name: Update pyproject.toml version
         run: |
-          sed -i -E "s/^version = \".*\"/version = \"${{ env.APP_VERSION }}\"/" pyproject.toml
+          sed -i -E "s/^version = \".*\"/version = \"${{ env.APP_VERSION }}\"/" \
+            pyproject.toml
 
       - name: Commit and Tag Release
         run: |
@@ -174,7 +179,8 @@ jobs:
 
       - name: Update pyproject.toml version
         run: |
-          sed -i -E "s/^version = \".*\"/version = \"${{ env.APP_VERSION }}\"/" pyproject.toml
+          sed -i -E "s/^version = \".*\"/version = \"${{ env.APP_VERSION }}\"/" \
+            pyproject.toml
 
       - name: Set up Docker Buildx
         uses: >-

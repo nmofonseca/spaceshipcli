@@ -2,9 +2,10 @@
 Main entry point for the Spaceship CLI.
 """
 
-import typer
 from importlib import metadata
+import typer
 from spaceship_cli.commands import domains, dns, contacts
+
 
 def version_callback(value: bool):
     """
@@ -15,6 +16,7 @@ def version_callback(value: bool):
         typer.echo(f"spaceshipcli v{version}")
         raise typer.Exit()
 
+
 app = typer.Typer(
     name="spaceship",
     help="""Spaceship.com CLI Tool
@@ -24,6 +26,7 @@ environment variables to be set in order to interact with the API.""",
     add_completion=False,
     no_args_is_help=True,
 )
+
 
 @app.callback()
 def main(
@@ -39,7 +42,9 @@ def main(
     """
     Main entry point for the Spaceship CLI.
     """
-    pass
+    if version:
+        pass
+
 
 app.add_typer(domains.app, name="domains", help="Manage domains")
 app.add_typer(dns.app, name="dns", help="Manage DNS records")
