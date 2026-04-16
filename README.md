@@ -46,6 +46,16 @@ SPACESHIP_API_SECRET=your_api_secret
 
 Run the CLI using `uv run spaceship`.
 
+### Versioning
+
+To check the current version of the CLI tool:
+
+```bash
+uv run spaceship --version
+# or
+uv run spaceship -v
+```
+
 ### Getting Help
 
 To see the available commands and options, you can run the CLI without any arguments or use the `--help` flag:
@@ -62,24 +72,33 @@ You can also use the `--help` flag on any specific command to see its usage:
 uv run spaceship domains --help
 ```
 
+### Output Formatting
+
+By default, all commands output data as formatted, human-readable terminal tables.
+You can output raw JSON instead by passing the `--format json` option to any command:
+
+```bash
+uv run spaceship domains list --format json
+```
+
 ### Building Standalone Binary
 
 To build a standalone executable that doesn't require Python or `uv` to be installed on the target machine:
 
 ```bash
-uv run pyinstaller --onefile --name spaceship --clean src/spaceship_cli/main.py
+uv run pyinstaller --onefile --name "spaceshipcli-v$(uv run spaceship --version | cut -d ' ' -f 2)-linux-amd64" --clean src/spaceship_cli/main.py
 ```
 
-The binary will be created in the `dist/` directory.
+The binary will be created in the `dist/` directory with a versioned name.
 
 ### Running via Docker
 
-You can also run the CLI as a Docker container. The Dockerfile uses a multi-stage build to package the standalone binary into a minimal runtime image.
+You can also run the CLI as a Docker container. The Dockerfile uses a multi-stage build to package the standalone binary into a minimal runtime image. The image includes OCI-compliant labels for versioning and metadata.
 
 Build the Docker image:
 
 ```bash
-docker build -t spaceshipcli .
+docker build -t spaceshipcli --build-arg VERSION=$(uv run spaceship --version | cut -d ' ' -f 2) .
 ```
 
 Run the container, passing your API credentials as environment variables:
@@ -167,7 +186,32 @@ uv run spaceship contacts info 1ZdMXpapqp9sle5dl8BlppTJXAzf5
 
 ## Development
 
-Run tests:
+### Linting
+
+This project uses `super-linter` to maintain high code quality standards. You should run the linter locally before pushing any changes to ensure the CI pipeline passes.
+
+Run the linter using Docker:
+
+```bash
+docker run --rm \
+  -e RUN_LOCAL=true \
+  -e VALIDATE_PYTHON_BLACK=true \
+  -e VALIDATE_PYTHON_RUFF=true \
+  -e VALIDATE_PYTHON_PYLINT=true \
+  -e VALIDATE_PYTHON_MYPY=true \
+  -e VALIDATE_DOCKERFILE_HADOLINT=true \
+  -e VALIDATE_MARKDOWN=true \
+  -e VALIDATE_YAML=true \
+  -e VALIDATE_JSON=true \
+  -e DEFAULT_BRANCH="develop" \
+  -v "$PWD":/tmp/lint \
+  ghcr.io/super-linter/super-linter:slim-v8.6.0
+```
+
+### Running tests
+
+Run the test suite using `uv`:
+
 ```bash
 uv run pytest
 ```

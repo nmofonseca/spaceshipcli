@@ -2,9 +2,10 @@
 FROM python:3.12-slim-bookworm AS builder
 
 # Required for PyInstaller and some python packages
+# Consolidate RUN and remove cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
+    build-essential=12.9 \
+    curl=7.88.1-10+deb12u14 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for fast dependency resolution and installation
@@ -20,26 +21,32 @@ ENV UV_COMPILE_BYTECODE=1
 COPY pyproject.toml uv.lock README.md ./
 
 # Install dependencies without the project itself (for cache optimization)
+# Consolidate with the rest of the build
 RUN uv sync --frozen --no-install-project
 
 # Copy the rest of the application source code
 COPY src/ ./src/
 
-# Sync again to install the project
-RUN uv sync --frozen
-
-# Build the standalone binary using PyInstaller
-RUN uv run pyinstaller --onefile --name spaceshipcli --clean src/spaceship_cli/main.py
+# Sync again to install the project and build the standalone binary using PyInstaller
+RUN uv sync --frozen && \
+    uv run pyinstaller --onefile --name spaceshipcli --clean src/spaceship_cli/main.py
 
 # Stage 2: Create the minimal runtime image
 FROM debian:bookworm-slim
+
+# Add OCI labels for metadata
+ARG VERSION
+LABEL org.opencontainers.image.title="spaceshipcli" \
+      org.opencontainers.image.description="Spaceship.com CLI Tool" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.source="https://github.com/nmofonseca/spaceshipcli"
 
 # Create a non-root user for security
 RUN groupadd -r spaceshipcli && useradd -r -g spaceshipcli spaceshipcli
 
 # Install ca-certificates to ensure httpx can make HTTPS requests to the Spaceship API
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
+    ca-certificates=20230311+deb12u1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

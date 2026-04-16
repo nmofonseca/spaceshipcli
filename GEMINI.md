@@ -2,7 +2,7 @@
 
 ## General Instructions
 
-- Documentation for spaceship.com public API should be read from here: https://docs.spaceship.dev/
+- Documentation for spaceship.com public API should be read from here: <https://docs.spaceship.dev/>
 - The online public API documentation should be the source in how to interact with the api's for different action, e.g. list domains, create DNS records, update DNS records, etc..
 - Python Language should be used to create the tool or cli for interacting with the api
 - Follow the existing condig style for all modifications
@@ -21,6 +21,15 @@
 - **Compatibility**: Should target Python 3.10 and higher versions.
 - **Imports**: Organize imports according to PEP 8 (standard library, third-party, local application).
 - **Complexity**: Keep functions small and focused on a single task.
+- **Quality Score**: Maintain a Pylint score of 10/10 for all production and test code.
+
+## CI/CD and Code Quality
+
+- **Automated Linting**: A GitHub Action using `super-linter` (slim version) is used to enforce code quality on every push to `develop` and on every pull request to `main`.
+- **Linter Configuration**: The following linters must be active and passing: `black`, `ruff`, `pylint`, `mypy`, `hadolint` (Docker), `markdownlint`, `yamllint`, and `jsonlint`.
+- **Action Security**: All GitHub Actions used in the pipeline must be pinned to a specific, immutable SHA digest rather than a mutable tag (e.g., use `actions/checkout@34e1148...` instead of `@v4`).
+  - **Pinning Syntax**: To comply with the 80-character line length limit enforced by `yamllint`, long action strings should be declared using the YAML folded block scalar (`>-`) syntax. This keeps the SHA digest on its own line and allows for a version comment on the following line for readability.
+- **Local Verification**: Before pushing changes, developers MUST verify code quality locally after every code change. This should be done using either the project's standardized `super-linter` Docker command or by running each individual linter (`black`, `ruff`, `pylint`, `mypy`, `hadolint`, `markdownlint`, `yamllint`, and `jsonlint`) to ensure all checks pass before submission.
 
 ## Docker Best Practices
 
@@ -30,19 +39,34 @@
 - **Security**: The runtime container operates under a dedicated, non-root user (`spaceshipcli`) to adhere to the principle of least privilege.
 - **Minimal Footprint**: Only the compiled PyInstaller binary and necessary `ca-certificates` (for secure API requests) are copied to the runtime stage.
 - **Build Caching**: The `uv` dependency installation is separated from the source code copy (`uv sync --frozen --no-install-project` run beforehand) to leverage Docker layer caching efficiently.
+- **Metadata**: Docker images must include OCI-compliant labels (Title, Description, Version, Source) provided via the `VERSION` build argument.
 
-# Description of Project
+## Automated Semantic Versioning
+
+- **Tooling**: [GitVersion](https://gitversion.net/) is used to automatically determine the semantic version of the application.
+- **Workflow**: The project uses a "Mainline" (Trunk-Based) versioning strategy.
+  - Every commit on `main` increments the version.
+  - `develop` and feature branches use pre-release labels (e.g., `-dev`, `-pr`).
+- **Conventional Commits**: Commit messages must follow the Conventional Commits specification to trigger correct version bumps:
+  - `feat:` or `feature:` -> Minor bump.
+  - `fix:` or `patch:` -> Patch bump.
+  - `break:`, `breaking:`, or `BREAKING CHANGE:` -> Major bump.
+- **CLI Implementation**: The application must provide a `--version` (and `-v`) flag that displays the version string in the format `spaceshipcli vX.Y.Z`. This should be implemented using `importlib.metadata` to read the version from the package.
+- **CI Orchestration**: The GitHub Actions pipeline must use a dedicated `versioning` job to provide a consistent version string to all subsequent build and deployment jobs.
+
+## Description of Project
 
 I would like to create a cli tool in Python to interact with the api of spaceship.com a domain registration and web services platform, they have an API that can be used to interact with their service, unfortunately there is no cli to interact with the API's
 
-The API documentation is available here which you can read: https://docs.spaceship.dev/, this has documentation about the API.
+The API documentation is available here which you can read: <https://docs.spaceship.dev/>, this has documentation about the API.
 
-# Requirements
+## Requirements
 
 The cli should do the following:
 
-- Read API keys either from the .env file or from environment variables, SPACESHIP_API_KEY and SPACESHIP_API_SECRET, if not set provide return informing the user the fact SECRET and KEY are not ser, more information https://docs.spaceship.dev/#section/Spaceship-API/Authentication
+- Read API keys either from the .env file or from environment variables, SPACESHIP_API_KEY and SPACESHIP_API_SECRET, if not set provide return informing the user the fact SECRET and KEY are not ser, more information <https://docs.spaceship.dev/#section/Spaceship-API/Authentication>
 - Include a help command that outputs information on how to use the cli
+- Commands must support output formatting. The default format should be human-readable rich tables. A `--format json` flag must be available on all commands to output raw JSON responses.
 - I want to be able to do the following actions using the cli:
   - Get/List operations to implement:
     - Get a list of domains
@@ -55,4 +79,3 @@ The cli should do the following:
     - Get domain resource records list
 - The cli should be an executable in the end, compiled binary
 - Please create tests that allow to test cli functionality every code change.
-
