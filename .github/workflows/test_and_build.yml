@@ -128,10 +128,21 @@ jobs:
     env:
       APP_VERSION: ${{ needs.versioning.outputs.pep440_version }}
     steps:
+      - name: Generate GitHub App Token
+        uses: >-
+          actions/create-github-app-token@07e2b76421883a2ad595b83a9f3bcad3e9615839
+        # v3.1.1
+        id: app-token
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PK }}
+
       - name: Checkout Code
         uses: >-
           actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         # v6.0.2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Update pyproject.toml version
         run: |
@@ -158,7 +169,7 @@ jobs:
 
       - name: Create Release
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: >-
           gh release create "v${{ env.APP_VERSION }}"
           ./artifacts/spaceshipcli-v${{ env.APP_VERSION }}-linux-amd64
