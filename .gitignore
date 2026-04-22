@@ -1,8 +1,22 @@
+# Environments
 .env
 .venv
 .devbox
 .gemini
+
+# Build artifacts
 dist/
 build/
 *.spec
+
+# Python artifacts
 __pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# OS specific
+.DS_Store
+Thumbs.db

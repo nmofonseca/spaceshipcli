@@ -1,198 +1,122 @@
-# Spaceship.com CLI Tool
+# 🚀 Spaceship.com CLI Tool 🛸
 
-This is a command-line interface for managing Spaceship.com resources (Domains, DNS, Contacts) using the public API.
+[![Tests](https://github.com/nmofonseca/spaceshipcli/actions/workflows/test_and_build.yml/badge.svg)](https://github.com/nmofonseca/spaceshipcli/actions/workflows/test_and_build.yml)
+[![GitHub Super-Linter](https://github.com/nmofonseca/spaceshipcli/actions/workflows/linting.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
 
-## Development Environment
+> **A powerful, human-friendly command-line interface for managing your Spaceship.com resources (Domains, DNS, Contacts) directly from your terminal.** 💻✨
 
-### Using Devbox (Recommended)
+---
+
+## ✨ Features
+
+- 🌐 **Domain Management**: List, check availability, and retrieve detailed domain info.
+- 🔐 **DNS Control**: Full management of resource records.
+- 👤 **Contact Details**: Quickly access and manage your contact information.
+- 📄 **Flexible Output**: Human-readable rich tables by default, or raw JSON for automation.
+- 🏗️ **Portable**: Run via Python, as a standalone binary, or inside a Docker container.
+
+---
+
+## 🛠️ Development Environment
+
+### Using Devbox (Recommended) 📦
 
 This project uses [Devbox](https://www.jetify.com/devbox) to manage its development environment. It ensures that everyone has the same versions of `uv` and other tools installed.
 
-The configuration is defined in `devbox.json`. To start the development shell:
-
 ```bash
+# Start the development shell
 devbox shell
 ```
 
-Once inside the shell, you can proceed with the standard installation.
+---
 
-## Installation
+## 📦 Installation
 
 This project is managed with `uv`.
 
 ```bash
+# Sync dependencies
 uv sync
 ```
 
-## Configuration
+---
+
+## ⚙️ Configuration
 
 The CLI requires your Spaceship API credentials. You can provide them in two ways:
 
-### 1. Environment Variables
+### 1. 🔑 Environment Variables
 Set them directly in your shell:
 ```bash
 export SPACESHIP_API_KEY=your_api_key
 export SPACESHIP_API_SECRET=your_api_secret
 ```
 
-### 2. .env File
+### 2. 📝 .env File
 Create a `.env` file in the root directory:
 ```ini
 SPACESHIP_API_KEY=your_api_key
 SPACESHIP_API_SECRET=your_api_secret
 ```
 
-## Usage
+---
+
+## 🚀 Usage
 
 Run the CLI using `uv run spaceship`.
 
-### Versioning
+### 🔍 Quick Commands
 
-To check the current version of the CLI tool:
+| Task | Command |
+| :--- | :--- |
+| **Check Version** | `uv run spaceship --version` |
+| **Get Help** | `uv run spaceship --help` |
+| **List Domains** | `uv run spaceship domains list` |
+| **Check Domain** | `uv run spaceship domains check example.com` |
+| **List DNS** | `uv run spaceship dns list --domain example.com` |
 
-```bash
-uv run spaceship --version
-# or
-uv run spaceship -v
-```
-
-### Getting Help
-
-To see the available commands and options, you can run the CLI without any arguments or use the `--help` flag:
-
-```bash
-uv run spaceship
-# or
-uv run spaceship --help
-```
-
-You can also use the `--help` flag on any specific command to see its usage:
-
-```bash
-uv run spaceship domains --help
-```
-
-### Output Formatting
+### 📄 Output Formatting
 
 By default, all commands output data as formatted, human-readable terminal tables.
-You can output raw JSON instead by passing the `--format json` option to any command:
+You can output raw JSON instead by passing the `--format json` option:
 
 ```bash
 uv run spaceship domains list --format json
 ```
 
-### Building Standalone Binary
+---
 
-To build a standalone executable that doesn't require Python or `uv` to be installed on the target machine:
+## 🏗️ Building & Deployment
+
+### 🔨 Standalone Binary
+To build a standalone executable (no Python/uv required):
 
 ```bash
 uv run pyinstaller --onefile --name "spaceshipcli-v$(uv run spaceship --version | cut -d ' ' -f 2)-linux-amd64" --clean src/spaceship_cli/main.py
 ```
 
-The binary will be created in the `dist/` directory with a versioned name.
-
-### Running via Docker
-
-You can also run the CLI as a Docker container. The Dockerfile uses a multi-stage build to package the standalone binary into a minimal runtime image. The image includes OCI-compliant labels for versioning and metadata.
-
+### 🐳 Running via Docker
 Build the Docker image:
 
 ```bash
 docker build -t spaceshipcli --build-arg VERSION=$(uv run spaceship --version | cut -d ' ' -f 2) .
 ```
 
-Run the container, passing your API credentials as environment variables:
+Run the container:
 
 ```bash
 docker run --rm -e SPACESHIP_API_KEY=your_api_key -e SPACESHIP_API_SECRET=your_api_secret spaceshipcli domains list
 ```
 
-### Domains
+---
 
-List domains:
-```bash
-uv run spaceship domains list
-```
+## 🧪 Development
 
-**Options:**
-- `-l, --limit INTEGER`: Number of domains to return (default: 10).
-- `-o, --offset INTEGER`: Number of domains to skip (default: 0).
-- `--order-by TEXT`: Sort order. Supported values: `name`, `-name`, `expirationDate`, `-expirationDate`, etc.
-
-**Example:**
-```bash
-uv run spaceship domains list --limit 5 --order-by expirationDate
-```
-
-Get domain info:
-```bash
-uv run spaceship domains info example.com
-```
-
-Check domain availability:
-```bash
-uv run spaceship domains check example.com another-domain.net
-```
-
-Get personal nameservers:
-```bash
-uv run spaceship domains nameservers example.com
-```
-
-Get transfer details:
-```bash
-uv run spaceship domains transfer example.com
-```
-
-Get auth code (EPP):
-```bash
-uv run spaceship domains auth-code example.com
-```
-
-> **Note:** The `transfer` and `auth-code` commands have been implemented based on the API specification but have not yet been tested in a production environment.
-
-### DNS
-
-List DNS records for a domain:
-```bash
-uv run spaceship dns list --domain example.com
-```
-
-**Options:**
-- `-d, --domain TEXT`: The domain name to list records for. [required]
-- `-l, --limit INTEGER`: Number of records to return (default: 100).
-- `-o, --offset INTEGER`: Number of records to skip (default: 0).
-- `--order-by TEXT`: Sort order. Supported values: `type`, `-type`, `name`, `-name`.
-
-**Example with sorting and pagination:**
-```bash
-uv run spaceship dns list -d example.com --limit 20 --order-by -name
-```
-
-### Contacts
-
-Get detailed attributes for a specific contact:
-```bash
-uv run spaceship contacts info [CONTACT_ID]
-```
-
-**Arguments:**
-- `CONTACT_ID`: The unique identifier of the contact (e.g., `1ZdMXpapqp9sle5dl8BlppTJXAzf5`). [required]
-
-**Example:**
-```bash
-uv run spaceship contacts info 1ZdMXpapqp9sle5dl8BlppTJXAzf5
-```
-
-## Development
-
-### Linting
-
-This project uses `super-linter` to maintain high code quality standards. You should run the linter locally before pushing any changes to ensure the CI pipeline passes.
-
-Run the linter using Docker:
+### 🧹 Linting
+We use `super-linter` to maintain high standards. Run it locally:
 
 ```bash
+# Run the full linting suite via Docker
 docker run --rm \
   -e RUN_LOCAL=true \
   -e VALIDATE_PYTHON_BLACK=true \
@@ -208,10 +132,25 @@ docker run --rm \
   ghcr.io/super-linter/super-linter:slim-v8.6.0
 ```
 
-### Running tests
-
-Run the test suite using `uv`:
-
+### 🚥 Running Tests
 ```bash
 uv run pytest
 ```
+
+---
+
+### 📦 Command Reference Details
+
+#### Domains
+- **List domains**: `uv run spaceship domains list`
+- **Info**: `uv run spaceship domains info example.com`
+- **Availability**: `uv run spaceship domains check example.com`
+- **Nameservers**: `uv run spaceship domains nameservers example.com`
+- **Transfer details**: `uv run spaceship domains transfer example.com`
+- **Auth code**: `uv run spaceship domains auth-code example.com`
+
+#### DNS
+- **List records**: `uv run spaceship dns list --domain example.com`
+
+#### Contacts
+- **Contact info**: `uv run spaceship contacts info [CONTACT_ID]`
