@@ -4,8 +4,18 @@ name: Test and Build
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - 'README.md'
+      - 'devbox.json'
+      - 'devbox.lock'
+      - 'GEMINI.md'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'devbox.json'
+      - 'devbox.lock'
+      - 'GEMINI.md'
   workflow_dispatch:
 
 jobs:
