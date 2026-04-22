@@ -1,6 +1,6 @@
 [project]
 name = "spaceship-cli"
-version = "0.4.7"
+version = "0.4.8"
 description = "Spaceship.com CLI Tool"
 readme = "README.md"
 requires-python = ">=3.10"
