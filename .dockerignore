@@ -1,9 +1,28 @@
+# Git
+.git/
+.gitignore
+
+# Environments
 .venv/
 .env
-__pycache__/
-*.pyc
-.git/
 .devbox/
+.gemini/
+devbox.json
+devbox.lock
+
+# Build and distribution
 build/
 dist/
+*.spec
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Documentation
+GEMINI.md
 tests/
