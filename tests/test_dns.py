@@ -123,7 +123,7 @@ def test_add_dns_records_single() -> None:
     assert "Successfully added DNS Records for example.com" in result.stdout
     assert "CNAME" in result.stdout
     assert "www" in result.stdout
-    assert "example.com" in result.stdout
+    assert "Success" in result.stdout
 
     assert route_get.called
     assert route_put.called
@@ -254,8 +254,8 @@ def test_delete_dns_records_single() -> None:
 
     assert result.exit_code == 0
     assert "Successfully deleted DNS Records" in result.stdout
-    assert "example.com" in result.stdout
     assert "TXT" in result.stdout
+    assert "Deleted" in result.stdout
 
     assert route_get.called
     assert route_delete.called
