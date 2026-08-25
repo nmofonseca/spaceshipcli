@@ -3,7 +3,7 @@ DNS commands for the Spaceship CLI.
 """
 
 import json
-from typing import Optional
+from typing import Any, Optional
 import httpx
 import typer
 from rich.table import Table
@@ -165,7 +165,9 @@ def add_dns(
 @app.command(name="delete")
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks
 def delete_dns(
-    domain: str = typer.Option(..., "--domain", "-d", help="Domain to delete records from"),
+    domain: str = typer.Option(
+        ..., "--domain", "-d", help="Domain to delete records from"
+    ),
     file: Optional[str] = typer.Option(
         None, "--file", "-f", help="Path to JSON file with records to delete"
     ),
@@ -230,9 +232,8 @@ def delete_dns(
                 dr_val = dr.get("value") or dr.get("address")
 
                 # Check for match (if dr_val is provided, it must match exactly)
-                if (
-                    er.get("type") == dr.get("type")
-                    and er.get("name") == dr.get("name")
+                if er.get("type") == dr.get("type") and er.get("name") == dr.get(
+                    "name"
                 ):
                     if dr_val:
                         if er_val == dr_val:
@@ -255,9 +256,9 @@ def delete_dns(
             raise typer.Exit(code=0)
 
         # Clean deleted records for the DELETE payload
-        clean_deleted = []
+        clean_deleted: list[dict[str, Any]] = []
         for dr in deleted_records:
-            item = {
+            item: dict[str, Any] = {
                 "type": dr["type"],
                 "name": dr["name"],
             }
@@ -300,9 +301,7 @@ def update_dns(
     record_type: str = typer.Option(
         ..., "--type", "-t", help="Record type (A, CNAME, TXT, etc.)"
     ),
-    name: str = typer.Option(
-        ..., "--name", "-n", help="Host/name (e.g., '@', 'www')"
-    ),
+    name: str = typer.Option(..., "--name", "-n", help="Host/name (e.g., '@', 'www')"),
     current_value: Optional[str] = typer.Option(
         None,
         "--current-value",
@@ -339,10 +338,7 @@ def update_dns(
         matches = []
         for er in existing_items:
             er_val = er.get("value") or er.get("address")
-            if (
-                er.get("type") == record_type.upper()
-                and er.get("name") == name
-            ):
+            if er.get("type") == record_type.upper() and er.get("name") == name:
                 if current_value:
                     if er_val == current_value:
                         matches.append(er)
@@ -378,7 +374,7 @@ def update_dns(
 
         # Delete old record if the value/address is changing
         if new_value:
-            old_record_cleaned = {
+            old_record_cleaned: dict[str, Any] = {
                 "type": record_type.upper(),
                 "name": name,
             }
@@ -389,7 +385,7 @@ def update_dns(
             client.delete_dns_records(domain, [old_record_cleaned])
 
         # Save/update new record
-        new_record_cleaned = {
+        new_record_cleaned: dict[str, Any] = {
             "type": record_type.upper(),
             "name": name,
             "ttl": new_ttl or old_ttl,
@@ -410,7 +406,11 @@ def update_dns(
         table.add_column("New TTL", style="green")
         table.add_column("Status", style="blue")
 
-        final_val = new_record_cleaned.get("value") or new_record_cleaned.get("address") or "N/A"
+        final_val = (
+            new_record_cleaned.get("value")
+            or new_record_cleaned.get("address")
+            or "N/A"
+        )
         final_ttl = new_record_cleaned.get("ttl", "N/A")
 
         table.add_row(

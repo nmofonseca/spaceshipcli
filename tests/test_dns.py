@@ -227,14 +227,14 @@ def test_delete_dns_records_single() -> None:
             json={
                 "items": [
                     {"type": "A", "name": "@", "address": "1.2.3.4", "ttl": 3600},
-                    {"type": "TXT", "name": "@", "value": "v=spf1", "ttl": 3600}
+                    {"type": "TXT", "name": "@", "value": "v=spf1", "ttl": 3600},
                 ]
             },
         )
     )
-    route_delete = respx.delete(f"https://spaceship.dev/api/v1/dns/records/{domain}").mock(
-        return_value=Response(204)
-    )
+    route_delete = respx.delete(
+        f"https://spaceship.dev/api/v1/dns/records/{domain}"
+    ).mock(return_value=Response(204))
 
     result = runner.invoke(
         app,
@@ -248,7 +248,7 @@ def test_delete_dns_records_single() -> None:
             "--name",
             "@",
             "--value",
-            "v=spf1"
+            "v=spf1",
         ],
     )
 
@@ -271,13 +271,7 @@ def test_delete_dns_records_bulk(tmp_path) -> None:
     """Test bulk deleting DNS records via a JSON file."""
     domain = "example.com"
     json_file = tmp_path / "delete_records.json"
-    records = [
-        {
-            "type": "A",
-            "name": "www",
-            "address": "1.1.1.1"
-        }
-    ]
+    records = [{"type": "A", "name": "www", "address": "1.1.1.1"}]
     json_file.write_text(json.dumps(records))
 
     respx.get(f"https://spaceship.dev/api/v1/dns/records/{domain}").mock(
@@ -286,14 +280,14 @@ def test_delete_dns_records_bulk(tmp_path) -> None:
             json={
                 "items": [
                     {"type": "A", "name": "@", "address": "1.2.3.4", "ttl": 3600},
-                    {"type": "A", "name": "www", "address": "1.1.1.1", "ttl": 3600}
+                    {"type": "A", "name": "www", "address": "1.1.1.1", "ttl": 3600},
                 ]
             },
         )
     )
-    route_delete = respx.delete(f"https://spaceship.dev/api/v1/dns/records/{domain}").mock(
-        return_value=Response(204)
-    )
+    route_delete = respx.delete(
+        f"https://spaceship.dev/api/v1/dns/records/{domain}"
+    ).mock(return_value=Response(204))
 
     result = runner.invoke(
         app, ["dns", "delete", "--domain", domain, "--file", str(json_file)]
@@ -318,14 +312,19 @@ def test_update_dns_success() -> None:
             json={
                 "items": [
                     {"type": "A", "name": "@", "address": "1.2.3.4", "ttl": 3600},
-                    {"type": "CNAME", "name": "www", "value": "old.example.com", "ttl": 1800}
+                    {
+                        "type": "CNAME",
+                        "name": "www",
+                        "value": "old.example.com",
+                        "ttl": 1800,
+                    },
                 ]
             },
         )
     )
-    route_delete = respx.delete(f"https://spaceship.dev/api/v1/dns/records/{domain}").mock(
-        return_value=Response(204)
-    )
+    route_delete = respx.delete(
+        f"https://spaceship.dev/api/v1/dns/records/{domain}"
+    ).mock(return_value=Response(204))
     route_put = respx.put(f"https://spaceship.dev/api/v1/dns/records/{domain}").mock(
         return_value=Response(204)
     )
@@ -344,7 +343,7 @@ def test_update_dns_success() -> None:
             "--new-value",
             "new.example.com",
             "--new-ttl",
-            "3600"
+            "3600",
         ],
     )
 
@@ -373,21 +372,11 @@ def test_update_dns_no_changes() -> None:
     domain = "example.com"
     result = runner.invoke(
         app,
-        [
-            "dns",
-            "update",
-            "--domain",
-            domain,
-            "--type",
-            "A",
-            "--name",
-            "www"
-        ],
+        ["dns", "update", "--domain", domain, "--type", "A", "--name", "www"],
     )
     assert result.exit_code == 1
-    assert (
-        "Error: You must specify at least one property to update"
-        in (result.stdout + result.stderr)
+    assert "Error: You must specify at least one property to update" in (
+        result.stdout + result.stderr
     )
 
 
@@ -416,7 +405,7 @@ def test_update_dns_not_found() -> None:
             "--name",
             "www",
             "--new-value",
-            "2.2.2.2"
+            "2.2.2.2",
         ],
     )
     assert result.exit_code == 1
@@ -433,7 +422,7 @@ def test_update_dns_ambiguous() -> None:
             json={
                 "items": [
                     {"type": "A", "name": "@", "address": "1.1.1.1", "ttl": 3600},
-                    {"type": "A", "name": "@", "address": "2.2.2.2", "ttl": 3600}
+                    {"type": "A", "name": "@", "address": "2.2.2.2", "ttl": 3600},
                 ]
             },
         )
@@ -451,11 +440,13 @@ def test_update_dns_ambiguous() -> None:
             "--name",
             "@",
             "--new-ttl",
-            "600"
+            "600",
         ],
     )
     assert result.exit_code == 1
-    assert "Error: Multiple matching DNS records found" in (result.stdout + result.stderr)
+    assert "Error: Multiple matching DNS records found" in (
+        result.stdout + result.stderr
+    )
 
     # Now specify --current-value to resolve ambiguity
     route_put = respx.put(f"https://spaceship.dev/api/v1/dns/records/{domain}").mock(
@@ -475,7 +466,7 @@ def test_update_dns_ambiguous() -> None:
             "--current-value",
             "1.1.1.1",
             "--new-ttl",
-            "600"
+            "600",
         ],
     )
     assert result_resolved.exit_code == 0

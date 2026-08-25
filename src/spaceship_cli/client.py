@@ -58,7 +58,9 @@ class SpaceshipClient:
     def _delete(self, endpoint: str, json_data: Optional[Any] = None) -> Any:
         url = f"{self.base_url}{endpoint}"
         with httpx.Client() as client:
-            response = client.request("DELETE", url, headers=self.headers, json=json_data)
+            response = client.request(
+                "DELETE", url, headers=self.headers, json=json_data
+            )
             response.raise_for_status()
             if response.status_code == 204:
                 return None

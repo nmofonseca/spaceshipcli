@@ -89,16 +89,16 @@ The cli should do the following:
 **Command:** `spaceshipcli dns add`
 
 **Implementation Steps:**
-1.  **API Client Update (`client.py`)**:
+1. **API Client Update (`client.py`)**:
     - Add `replace_dns_records(self, domain: str, records: list[dict], force: bool = False)` using `PUT /v1/dns/records/{domain}`.
-2.  **CLI Command Update (`dns.py`)**:
+2. **CLI Command Update (`dns.py`)**:
     - Add `add` command accepting options for `--domain` (required), `--type`, `--name`, `--value` (or `--address`), and `--ttl`.
     - Accept a `--file` (or `-f`) option for bulk importing records from a JSON file.
     - **Merging Logic**: Before sending the `PUT` request, the command must fetch the existing records (`GET /v1/dns/records/{domain}`), append the new record(s) matching the format, and then send the complete merged list via `PUT`.
     - Output a rich table listing the records that were just created/updated and their status.
-3.  **Documentation (`README.md`)**:
+3. **Documentation (`README.md`)**:
     - Add clear examples showing how to add single records and bulk records via JSON.
-4.  **Testing (`test_dns.py`)**:
+4. **Testing (`test_dns.py`)**:
     - Add `respx.mock` tests to verify the `GET` (fetch) + `PUT` (merge and save) workflow.
     - Add tests for JSON file bulk imports.
 
@@ -107,14 +107,14 @@ The cli should do the following:
 **Command:** `spaceship dns delete`
 
 **Implementation Steps:**
-1.  **CLI Command Update (`dns.py`)**:
+1. **CLI Command Update (`dns.py`)**:
     - Add `delete` command accepting options for `--domain` (required), `--type`, `--name`, and optionally `--value`.
     - Accept a `--file` (or `-f`) option for bulk specifying records to delete from a JSON file.
     - **Filtering Logic**: Fetch all existing records (`GET /v1/dns/records/{domain}`). Filter out any records that match the specified deletion criteria. Send the remaining list via `PUT /v1/dns/records/{domain}`.
     - Output a rich table listing the records that were deleted and their status.
-2.  **Documentation (`README.md`)**:
+2. **Documentation (`README.md`)**:
     - Add clear examples showing how to delete single records and bulk records via JSON.
-3.  **Testing (`test_dns.py`)**:
+3. **Testing (`test_dns.py`)**:
     - Add `respx.mock` tests to verify the `GET` (fetch), filter out, and `PUT` (save) workflow for both single and bulk deletions.
 
 ### DNS Record Update
@@ -122,13 +122,13 @@ The cli should do the following:
 **Command:** `spaceship dns update`
 
 **Implementation Steps:**
-1.  **CLI Command Update (`dns.py`)**:
+1. **CLI Command Update (`dns.py`)**:
     - Add `update` command accepting options for `--domain` (required), `--type` (required), `--name` (required), `--current-value` (optional), `--new-value` (optional), and `--new-ttl` (optional).
     - **Logic**: Fetch all existing records. Identify the matching record by type, name, and optionally current-value (required if duplicates exist). Update its value or TTL, and save the updated list via `PUT`.
     - Output a rich table showing the updated record and its status.
-2.  **Documentation (`README.md`)**:
+2. **Documentation (`README.md`)**:
     - Add clear examples showing how to update a record's value or TTL.
-3.  **Testing (`test_dns.py`)**:
+3. **Testing (`test_dns.py`)**:
     - Add `respx.mock` tests to verify successful updates and error cases (like missing record, ambiguous record match).
 
 ## Architecture and Code Flow
@@ -139,24 +139,24 @@ The Spaceship CLI is designed to be modular. This means we split the program int
 
 Think of this CLI tool like a well-organized **Restaurant**:
 
-1.  **`main.py` (The Front Desk / Host):** 
+1. **`main.py` (The Front Desk / Host):**
     When you run a command like `spaceship domains list`, this is the first place you go. `main.py` looks at what you want to do and points you to the right department.
-2.  **`commands/*.py` (The Waitstaff):** 
+2. **`commands/*.py` (The Waitstaff):**
     These files (like `domains.py`, `dns.py`) take your specific order. For example, `domains.py` knows exactly what information is needed to "list domains" or "check availability". It gathers your instructions and prepares the order.
-3.  **`config.py` (The Security Check):** 
+3. **`config.py` (The Security Check):**
     Before anything leaves the restaurant, we need to prove who we are. `config.py` acts like a security guard that grabs your secret `SPACESHIP_API_KEY` and `SPACESHIP_API_SECRET` from your environment so the kitchen knows you're allowed to order.
-4.  **`client.py` (The Kitchen / Delivery System):** 
+4. **`client.py` (The Kitchen / Delivery System):**
     This is the engine. The `SpaceshipClient` takes the order from the waitstaff, packages it up with your security credentials, and sends it over the internet to Spaceship.com's real servers. It then waits for the response and brings the raw data back.
-5.  **`utils.py` (The Plating & Presentation Team):** 
+5. **`utils.py` (The Plating & Presentation Team):**
     The raw data from Spaceship.com is messy. `utils.py` takes that messy data and formats it beautifully into the colorful, easy-to-read tables you see on your screen.
 
 ### Technical Component Overview
 
-*   **`main.py`**: The entry point. Sets up the primary Typer application and mounts the subcommands.
-*   **`commands/*.py`**: Typer sub-applications that parse arguments, handle user input, and call the respective methods in the API client.
-*   **`client.py`**: Contains `SpaceshipClient`, a wrapper around `httpx`. Responsible for making authenticated HTTP requests to the Spaceship API.
-*   **`config.py`**: Uses `pydantic-settings` to securely load the API key and secret.
-*   **`utils.py`**: Handles all console output using the `rich` library, rendering tables or JSON.
+* **`main.py`**: The entry point. Sets up the primary Typer application and mounts the subcommands.
+* **`commands/*.py`**: Typer sub-applications that parse arguments, handle user input, and call the respective methods in the API client.
+* **`client.py`**: Contains `SpaceshipClient`, a wrapper around `httpx`. Responsible for making authenticated HTTP requests to the Spaceship API.
+* **`config.py`**: Uses `pydantic-settings` to securely load the API key and secret.
+* **`utils.py`**: Handles all console output using the `rich` library, rendering tables or JSON.
 
 ### Execution Flow Diagram
 

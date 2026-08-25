@@ -142,23 +142,23 @@ uv run pytest
 ### 📦 Command Reference Details
 
 #### Domains
-- **List domains**: 
+- **List domains**:
   - `spaceship domains list`
   - *Example with options*: `spaceship domains list --limit 20 --offset 10 --order-by expirationDate --format json`
-- **Info**: 
+- **Info**:
   - `spaceship domains info example.com`
-- **Availability**: 
+- **Availability**:
   - `spaceship domains check example.com`
   - *Example for multiple domains*: `spaceship domains check example.com example.org example.net`
-- **Nameservers**: 
+- **Nameservers**:
   - `spaceship domains nameservers example.com`
-- **Transfer details**: 
+- **Transfer details**:
   - `spaceship domains transfer example.com`
-- **Auth code**: 
+- **Auth code**:
   - `spaceship domains auth-code example.com`
 
 #### DNS
-- **List records**: 
+- **List records**:
   - `spaceship dns list --domain example.com`
   - *Example with options*: `spaceship dns list --domain example.com --limit 50 --order-by name`
 - **Add DNS records**: Adds or updates records without deleting existing ones by automatically fetching the current records, merging them (skipping exact duplicates), and updating the DNS zone.
@@ -213,5 +213,5 @@ uv run pytest
     > If a domain has multiple records with the same type and host name (e.g. multiple `A` records), you **must** specify the `--current-value` option. This ensures the CLI updates the exact record intended and prevents ambiguity. If omitted in this scenario, the CLI will exit with an error.
 
 #### Contacts
-- **Contact info**: 
+- **Contact info**:
   - `spaceship contacts info 12345678-1234-1234-1234-123456789012`
