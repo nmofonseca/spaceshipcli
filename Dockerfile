@@ -5,7 +5,7 @@ FROM python:3.12-slim-bookworm AS builder
 # Consolidate RUN and remove cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential=12.9 \
-    curl=7.88.1-10+deb12u14 \
+    curl=7.88.1-10+deb12u15 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for fast dependency resolution and installation

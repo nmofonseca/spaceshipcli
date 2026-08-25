@@ -63,17 +63,17 @@ SPACESHIP_API_SECRET=your_api_secret
 
 ## 🚀 Usage
 
-Run the CLI using `uv run spaceship`.
+Run the CLI using `spaceship`.
 
 ### 🔍 Quick Commands
 
 | Task | Command |
 | :--- | :--- |
-| **Check Version** | `uv run spaceship --version` |
-| **Get Help** | `uv run spaceship --help` |
-| **List Domains** | `uv run spaceship domains list` |
-| **Check Domain** | `uv run spaceship domains check example.com` |
-| **List DNS** | `uv run spaceship dns list --domain example.com` |
+| **Check Version** | `spaceship --version` |
+| **Get Help** | `spaceship --help` |
+| **List Domains** | `spaceship domains list` |
+| **Check Domain** | `spaceship domains check example.com` |
+| **List DNS** | `spaceship dns list --domain example.com` |
 
 ### 📄 Output Formatting
 
@@ -81,7 +81,7 @@ By default, all commands output data as formatted, human-readable terminal table
 You can output raw JSON instead by passing the `--format json` option:
 
 ```bash
-uv run spaceship domains list --format json
+spaceship domains list --format json
 ```
 
 ---
@@ -142,15 +142,76 @@ uv run pytest
 ### 📦 Command Reference Details
 
 #### Domains
-- **List domains**: `uv run spaceship domains list`
-- **Info**: `uv run spaceship domains info example.com`
-- **Availability**: `uv run spaceship domains check example.com`
-- **Nameservers**: `uv run spaceship domains nameservers example.com`
-- **Transfer details**: `uv run spaceship domains transfer example.com`
-- **Auth code**: `uv run spaceship domains auth-code example.com`
+- **List domains**:
+  - `spaceship domains list`
+  - *Example with options*: `spaceship domains list --limit 20 --offset 10 --order-by expirationDate --format json`
+- **Info**:
+  - `spaceship domains info example.com`
+- **Availability**:
+  - `spaceship domains check example.com`
+  - *Example for multiple domains*: `spaceship domains check example.com example.org example.net`
+- **Nameservers**:
+  - `spaceship domains nameservers example.com`
+- **Transfer details**:
+  - `spaceship domains transfer example.com`
+- **Auth code**:
+  - `spaceship domains auth-code example.com`
 
 #### DNS
-- **List records**: `uv run spaceship dns list --domain example.com`
+- **List records**:
+  - `spaceship dns list --domain example.com`
+  - *Example with options*: `spaceship dns list --domain example.com --limit 50 --order-by name`
+- **Add DNS records**: Adds or updates records without deleting existing ones by automatically fetching the current records, merging them (skipping exact duplicates), and updating the DNS zone.
+  - **Single Record**:
+    ```bash
+    spaceship dns add --domain example.com --type A --name www --value 1.2.3.4 --ttl 3600
+    ```
+  - **Bulk Upload via JSON File**:
+    ```bash
+    spaceship dns add --domain example.com --file records.json
+    ```
+    *Example `records.json`*:
+    ```json
+    [
+      {
+        "type": "TXT",
+        "name": "@",
+        "value": "v=spf1 include:_spf.example.com ~all",
+        "ttl": 3600
+      },
+      {
+        "type": "A",
+        "name": "api",
+        "address": "1.2.3.4",
+        "ttl": 3600
+      }
+    ]
+    ```
+- **Delete DNS records**: Deletes specific records by automatically fetching the current records, filtering out the ones to delete, and updating the DNS zone.
+  - **Single Record**:
+    ```bash
+    spaceship dns delete --domain example.com --type A --name www --value 1.2.3.4
+    ```
+  - **Bulk Delete via JSON File**:
+    ```bash
+    spaceship dns delete --domain example.com --file delete_records.json
+    ```
+- **Update DNS record**: Updates an existing DNS record's value or TTL in-place.
+  - **Update Value**:
+    ```bash
+    spaceship dns update --domain example.com --type A --name www --new-value 2.2.2.2
+    ```
+  - **Update TTL**:
+    ```bash
+    spaceship dns update --domain example.com --type A --name www --new-ttl 600
+    ```
+  - **Specify Current Value (for resolving ambiguity)**:
+    ```bash
+    spaceship dns update --domain example.com --type A --name www --current-value 1.1.1.1 --new-value 2.2.2.2
+    ```
+    > [!IMPORTANT]
+    > If a domain has multiple records with the same type and host name (e.g. multiple `A` records), you **must** specify the `--current-value` option. This ensures the CLI updates the exact record intended and prevents ambiguity. If omitted in this scenario, the CLI will exit with an error.
 
 #### Contacts
-- **Contact info**: `uv run spaceship contacts info [CONTACT_ID]`
+- **Contact info**:
+  - `spaceship contacts info 12345678-1234-1234-1234-123456789012`

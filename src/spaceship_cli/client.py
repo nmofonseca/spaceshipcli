@@ -42,6 +42,28 @@ class SpaceshipClient:
         with httpx.Client() as client:
             response = client.post(url, headers=self.headers, json=json_data)
             response.raise_for_status()
+            if response.status_code == 204:
+                return None
+            return response.json()
+
+    def _put(self, endpoint: str, json_data: Optional[dict[str, Any]] = None) -> Any:
+        url = f"{self.base_url}{endpoint}"
+        with httpx.Client() as client:
+            response = client.put(url, headers=self.headers, json=json_data)
+            response.raise_for_status()
+            if response.status_code == 204:
+                return None
+            return response.json()
+
+    def _delete(self, endpoint: str, json_data: Optional[Any] = None) -> Any:
+        url = f"{self.base_url}{endpoint}"
+        with httpx.Client() as client:
+            response = client.request(
+                "DELETE", url, headers=self.headers, json=json_data
+            )
+            response.raise_for_status()
+            if response.status_code == 204:
+                return None
             return response.json()
 
     def list_domains(
@@ -71,6 +93,42 @@ class SpaceshipClient:
         if order_by:
             params["orderBy"] = order_by
         return self._get(f"/dns/records/{domain}", params=params)
+
+    def get_all_dns_records(self, domain: str) -> list[dict[str, Any]]:
+        """
+        Get all DNS records for a domain by paginating with max allowed limit.
+        Endpoint: GET /v1/dns/records/{domain}
+        """
+        all_records: list[dict[str, Any]] = []
+        offset = 0
+        limit = 100
+        while True:
+            data = self.list_dns_records(domain=domain, limit=limit, offset=offset)
+            items = data.get("items", []) if isinstance(data, dict) else data
+            if not items:
+                break
+            all_records.extend(items)
+            if len(items) < limit:
+                break
+            offset += limit
+        return all_records
+
+    def replace_dns_records(
+        self, domain: str, records: list[dict[str, Any]], force: bool = False
+    ) -> Any:
+        """
+        Save/Replace resource records.
+        Endpoint: PUT /v1/dns/records/{domain}
+        """
+        payload = {"force": force, "items": records}
+        return self._put(f"/dns/records/{domain}", json_data=payload)
+
+    def delete_dns_records(self, domain: str, records: list[dict[str, Any]]) -> Any:
+        """
+        Delete resource records.
+        Endpoint: DELETE /v1/dns/records/{domain}
+        """
+        return self._delete(f"/dns/records/{domain}", json_data=records)
 
     def get_domain_info(self, domain: str) -> Any:
         """
