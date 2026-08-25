@@ -60,9 +60,15 @@ SPACESHIP_API_SECRET=your_api_secret
 ```
 
 ---
+<<<<<<< HEAD
+=======
+
+## 🚀 Usage
+>>>>>>> origin/main
 
 ## 🚀 Usage
 
+<<<<<<< HEAD
 Run the CLI using `spaceship`.
 
 ### 🔍 Quick Commands
@@ -75,6 +81,18 @@ Run the CLI using `spaceship`.
 | **Check Domain** | `spaceship domains check example.com` |
 | **List DNS** | `spaceship dns list --domain example.com` |
 
+=======
+### 🔍 Quick Commands
+
+| Task | Command |
+| :--- | :--- |
+| **Check Version** | `uv run spaceship --version` |
+| **Get Help** | `uv run spaceship --help` |
+| **List Domains** | `uv run spaceship domains list` |
+| **Check Domain** | `uv run spaceship domains check example.com` |
+| **List DNS** | `uv run spaceship dns list --domain example.com` |
+
+>>>>>>> origin/main
 ### 📄 Output Formatting
 
 By default, all commands output data as formatted, human-readable terminal tables.
