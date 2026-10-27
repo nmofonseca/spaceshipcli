@@ -8,9 +8,22 @@ import httpx
 import typer
 from rich.table import Table
 from spaceship_cli.client import SpaceshipClient
+from spaceship_cli.dns_records import (
+    build_record_from_cli,
+    clean_record_for_delete,
+    clean_record_for_put,
+    get_record_value,
+    normalize_record,
+    records_match,
+)
 from spaceship_cli.utils import print_output
 
 app = typer.Typer()
+
+
+def _format_record_value(item: dict[str, Any]) -> str:
+    value = get_record_value(item)
+    return str(value) if value is not None else "N/A"
 
 
 @app.command(name="list")
@@ -53,7 +66,7 @@ def list_dns(
         for item in items:
             record_type = item.get("type", "N/A")
             host = item.get("name", "@")
-            value = item.get("value") or item.get("address") or "N/A"
+            value = _format_record_value(item)
             ttl = item.get("ttl", "N/A")
 
             table.add_row(str(record_type), str(host), str(value), str(ttl))
@@ -79,6 +92,9 @@ def add_dns(
     ),
     value: Optional[str] = typer.Option(None, "--value", "-v", help="Value or address"),
     ttl: Optional[int] = typer.Option(3600, "--ttl", help="TTL in seconds"),
+    preference: Optional[int] = typer.Option(
+        None, "--preference", help="MX preference / priority (MX records)"
+    ),
     output_format: str = typer.Option(
         "table", "--format", help="Output format: table or json"
     ),
@@ -86,13 +102,19 @@ def add_dns(
     """
     Add DNS records for a domain without deleting existing records.
     Supports bulk additions via a JSON file.
+
+    Simple CLI flags map --value to the Spaceship type-specific field
+    (e.g. CNAME -> cname, A/AAAA -> address, MX -> exchange).
     """
-    new_records = []
+    new_records: list[dict[str, Any]] = []
 
     if file:
         try:
             with open(file, "r", encoding="utf-8") as f:
-                new_records.extend(json.load(f))
+                loaded = json.load(f)
+            if not isinstance(loaded, list):
+                raise ValueError("JSON file must contain an array of records")
+            new_records.extend(normalize_record(item) for item in loaded)
         except Exception as e:
             typer.secho(
                 f"Error reading file {file}: {e}", fg=typer.colors.RED, err=True
@@ -100,12 +122,15 @@ def add_dns(
             raise typer.Exit(code=1)
 
     if record_type and name and value:
-        rec = {"type": record_type.upper(), "name": name, "ttl": ttl}
-        if record_type.upper() in ["A", "AAAA"]:
-            rec["address"] = value
-        else:
-            rec["value"] = value
-        new_records.append(rec)
+        new_records.append(
+            build_record_from_cli(
+                record_type=record_type,
+                name=name,
+                value=value,
+                ttl=ttl,
+                preference=preference,
+            )
+        )
 
     if not new_records:
         typer.secho(
@@ -117,28 +142,18 @@ def add_dns(
 
     client = SpaceshipClient()
     try:
-        # Fetch existing
         existing_items = client.get_all_dns_records(domain=domain)
 
-        merged_records = []
-        for er in existing_items:
-            merged_records.append(er)
+        merged_records = [clean_record_for_put(er) for er in existing_items]
 
         for nr in new_records:
-            duplicate = False
-            for mr in merged_records:
-                # Basic duplicate check
-                mr_val = mr.get("value") or mr.get("address")
-                nr_val = nr.get("value") or nr.get("address")
-                if (
-                    mr.get("type") == nr.get("type")
-                    and mr.get("name") == nr.get("name")
-                    and mr_val == nr_val
-                ):
-                    duplicate = True
-                    break
+            candidate = clean_record_for_put(nr)
+            duplicate = any(
+                records_match(mr, candidate, require_value=True)
+                for mr in merged_records
+            )
             if not duplicate:
-                merged_records.append(nr)
+                merged_records.append(candidate)
 
         client.replace_dns_records(domain, merged_records)
 
@@ -150,13 +165,20 @@ def add_dns(
         table.add_column("Status", style="blue")
 
         for item in new_records:
-            t = item.get("type", "N/A")
-            h = item.get("name", "@")
-            v = item.get("value") or item.get("address") or "N/A"
-            tl = item.get("ttl", "N/A")
-            table.add_row(str(t), str(h), str(v), str(tl), "Success")
+            cleaned = clean_record_for_put(item)
+            table.add_row(
+                str(cleaned.get("type", "N/A")),
+                str(cleaned.get("name", "@")),
+                _format_record_value(cleaned),
+                str(cleaned.get("ttl", "N/A")),
+                "Success",
+            )
 
-        print_output(new_records, output_format=output_format, table=table)
+        print_output(
+            [clean_record_for_put(r) for r in new_records],
+            output_format=output_format,
+            table=table,
+        )
 
     except (httpx.HTTPStatusError, RuntimeError) as e:
         print_output(f"[red]Error saving DNS records:[/red] {e}")
@@ -180,6 +202,9 @@ def delete_dns(
     value: Optional[str] = typer.Option(
         None, "--value", "-v", help="Value or address (optional, for exact match)"
     ),
+    preference: Optional[int] = typer.Option(
+        None, "--preference", help="MX preference (optional, for exact MX match)"
+    ),
     output_format: str = typer.Option(
         "table", "--format", help="Output format: table or json"
     ),
@@ -188,12 +213,15 @@ def delete_dns(
     Delete DNS records for a domain.
     Supports bulk deletions via a JSON file.
     """
-    records_to_delete = []
+    records_to_delete: list[dict[str, Any]] = []
 
     if file:
         try:
             with open(file, "r", encoding="utf-8") as f:
-                records_to_delete.extend(json.load(f))
+                loaded = json.load(f)
+            if not isinstance(loaded, list):
+                raise ValueError("JSON file must contain an array of records")
+            records_to_delete.extend(normalize_record(item) for item in loaded)
         except Exception as e:
             typer.secho(
                 f"Error reading file {file}: {e}", fg=typer.colors.RED, err=True
@@ -201,12 +229,18 @@ def delete_dns(
             raise typer.Exit(code=1)
 
     if record_type and name:
-        rec = {"type": record_type.upper(), "name": name}
-        if value:
-            if record_type.upper() in ["A", "AAAA"]:
-                rec["address"] = value
-            else:
-                rec["value"] = value
+        if value is not None:
+            rec = build_record_from_cli(
+                record_type=record_type,
+                name=name,
+                value=value,
+                preference=preference,
+            )
+            rec.pop("ttl", None)
+        else:
+            rec = {"type": record_type.upper(), "name": name}
+            if preference is not None:
+                rec["preference"] = preference
         records_to_delete.append(rec)
 
     if not records_to_delete:
@@ -219,34 +253,21 @@ def delete_dns(
 
     client = SpaceshipClient()
     try:
-        # Fetch existing
         existing_items = client.get_all_dns_records(domain=domain)
 
-        remaining_records = []
-        deleted_records = []
+        deleted_records: list[dict[str, Any]] = []
 
         for er in existing_items:
-            should_delete = False
-            er_val = er.get("value") or er.get("address")
-            for dr in records_to_delete:
-                dr_val = dr.get("value") or dr.get("address")
-
-                # Check for match (if dr_val is provided, it must match exactly)
-                if er.get("type") == dr.get("type") and er.get("name") == dr.get(
-                    "name"
-                ):
-                    if dr_val:
-                        if er_val == dr_val:
-                            should_delete = True
-                            break
-                    else:
-                        should_delete = True
-                        break
-
+            should_delete = any(
+                records_match(
+                    er,
+                    dr,
+                    require_value=get_record_value(dr) is not None,
+                )
+                for dr in records_to_delete
+            )
             if should_delete:
                 deleted_records.append(er)
-            else:
-                remaining_records.append(er)
 
         if not deleted_records:
             typer.secho(
@@ -255,19 +276,7 @@ def delete_dns(
             )
             raise typer.Exit(code=0)
 
-        # Clean deleted records for the DELETE payload
-        clean_deleted: list[dict[str, Any]] = []
-        for dr in deleted_records:
-            item: dict[str, Any] = {
-                "type": dr["type"],
-                "name": dr["name"],
-            }
-            if "address" in dr:
-                item["address"] = dr["address"]
-            if "value" in dr:
-                item["value"] = dr["value"]
-            clean_deleted.append(item)
-
+        clean_deleted = [clean_record_for_delete(dr) for dr in deleted_records]
         client.delete_dns_records(domain, clean_deleted)
 
         table = Table(title=f"Successfully deleted DNS Records for {domain}")
@@ -278,11 +287,13 @@ def delete_dns(
         table.add_column("Status", style="red")
 
         for item in deleted_records:
-            t = item.get("type", "N/A")
-            h = item.get("name", "@")
-            v = item.get("value") or item.get("address") or "N/A"
-            tl = item.get("ttl", "N/A")
-            table.add_row(str(t), str(h), str(v), str(tl), "Deleted")
+            table.add_row(
+                str(item.get("type", "N/A")),
+                str(item.get("name", "@")),
+                _format_record_value(item),
+                str(item.get("ttl", "N/A")),
+                "Deleted",
+            )
 
         print_output(deleted_records, output_format=output_format, table=table)
 
@@ -313,6 +324,9 @@ def update_dns(
     new_ttl: Optional[int] = typer.Option(
         None, "--new-ttl", help="New TTL to set in seconds"
     ),
+    preference: Optional[int] = typer.Option(
+        None, "--preference", help="MX preference (kept/updated for MX records)"
+    ),
     output_format: str = typer.Option(
         "table", "--format", help="Output format: table or json"
     ),
@@ -331,24 +345,33 @@ def update_dns(
 
     client = SpaceshipClient()
     try:
-        # Fetch existing records
         existing_items = client.get_all_dns_records(domain=domain)
+        rtype = record_type.upper()
 
-        # Find matching records
-        matches = []
-        for er in existing_items:
-            er_val = er.get("value") or er.get("address")
-            if er.get("type") == record_type.upper() and er.get("name") == name:
-                if current_value:
-                    if er_val == current_value:
-                        matches.append(er)
-                else:
-                    matches.append(er)
+        matcher: dict[str, Any] = {"type": rtype, "name": name}
+        if current_value is not None:
+            matcher = build_record_from_cli(
+                record_type=rtype,
+                name=name,
+                value=current_value,
+                preference=preference,
+            )
+            matcher.pop("ttl", None)
+
+        matches = [
+            er
+            for er in existing_items
+            if records_match(
+                er,
+                matcher,
+                require_value=current_value is not None,
+            )
+        ]
 
         if not matches:
             typer.secho(
                 f"Error: No matching DNS record found for {domain} with "
-                f"type={record_type.upper()}, name={name}"
+                f"type={rtype}, name={name}"
                 + (f", current_value={current_value}" if current_value else "")
                 + ".",
                 fg=typer.colors.RED,
@@ -359,7 +382,7 @@ def update_dns(
         if len(matches) > 1:
             typer.secho(
                 f"Error: Multiple matching DNS records found for {domain} "
-                f"with type={record_type.upper()}, name={name}. "
+                f"with type={rtype}, name={name}. "
                 "Please specify --current-value to identify which record "
                 "to update.",
                 fg=typer.colors.RED,
@@ -367,35 +390,34 @@ def update_dns(
             )
             raise typer.Exit(code=1)
 
-        # Update the single matched record in-place in existing_items list
         matched_record = matches[0]
-        old_val = matched_record.get("value") or matched_record.get("address")
+        old_val = get_record_value(matched_record)
         old_ttl = matched_record.get("ttl")
 
-        # Delete old record if the value/address is changing
         if new_value:
-            old_record_cleaned: dict[str, Any] = {
-                "type": record_type.upper(),
-                "name": name,
-            }
-            if record_type.upper() in ["A", "AAAA"]:
-                old_record_cleaned["address"] = old_val
-            else:
-                old_record_cleaned["value"] = old_val
-            client.delete_dns_records(domain, [old_record_cleaned])
+            client.delete_dns_records(
+                domain, [clean_record_for_delete(matched_record)]
+            )
 
-        # Save/update new record
-        new_record_cleaned: dict[str, Any] = {
-            "type": record_type.upper(),
-            "name": name,
-            "ttl": new_ttl or old_ttl,
-        }
-        if record_type.upper() in ["A", "AAAA"]:
-            new_record_cleaned["address"] = new_value or old_val
-        else:
-            new_record_cleaned["value"] = new_value or old_val
+        new_record = clean_record_for_put(matched_record)
+        new_record["ttl"] = new_ttl if new_ttl is not None else old_ttl
+        if new_value is not None:
+            rebuilt = build_record_from_cli(
+                record_type=rtype,
+                name=name,
+                value=new_value,
+                ttl=new_record["ttl"],
+                preference=(
+                    preference
+                    if preference is not None
+                    else matched_record.get("preference")
+                ),
+            )
+            new_record = clean_record_for_put(rebuilt)
+        elif preference is not None and rtype == "MX":
+            new_record["preference"] = preference
 
-        client.replace_dns_records(domain, [new_record_cleaned])
+        client.replace_dns_records(domain, [new_record])
 
         table = Table(title=f"Successfully updated DNS Record for {domain}")
         table.add_column("Type", style="cyan")
@@ -406,24 +428,20 @@ def update_dns(
         table.add_column("New TTL", style="green")
         table.add_column("Status", style="blue")
 
-        final_val = (
-            new_record_cleaned.get("value")
-            or new_record_cleaned.get("address")
-            or "N/A"
-        )
-        final_ttl = new_record_cleaned.get("ttl", "N/A")
+        final_val = get_record_value(new_record)
+        final_ttl = new_record.get("ttl", "N/A")
 
         table.add_row(
-            record_type.upper(),
+            rtype,
             name,
             str(old_val),
-            str(final_val),
+            str(final_val if final_val is not None else "N/A"),
             str(old_ttl),
             str(final_ttl),
             "Updated",
         )
 
-        print_output([new_record_cleaned], output_format=output_format, table=table)
+        print_output([new_record], output_format=output_format, table=table)
 
     except typer.Exit:
         raise

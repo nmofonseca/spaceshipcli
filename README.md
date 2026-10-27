@@ -165,12 +165,15 @@ uv run pytest
   - **Single Record**:
     ```bash
     spaceship dns add --domain example.com --type A --name www --value 1.2.3.4 --ttl 3600
+    spaceship dns add --domain example.com --type CNAME --name www --value example.com --ttl 300
+    spaceship dns add --domain example.com --type MX --name @ --value mail.example.com --preference 10
     ```
+    `--value` is mapped to the Spaceship type-specific field (`address`, `cname`, `exchange`, `nameserver`, etc.).
   - **Bulk Upload via JSON File**:
     ```bash
     spaceship dns add --domain example.com --file records.json
     ```
-    *Example `records.json`*:
+    *Example `records.json`* (use Spaceship field names, or a generic `value` which is remapped):
     ```json
     [
       {
@@ -184,6 +187,12 @@ uv run pytest
         "name": "api",
         "address": "1.2.3.4",
         "ttl": 3600
+      },
+      {
+        "type": "CNAME",
+        "name": "www",
+        "cname": "example.com",
+        "ttl": 300
       }
     ]
     ```
